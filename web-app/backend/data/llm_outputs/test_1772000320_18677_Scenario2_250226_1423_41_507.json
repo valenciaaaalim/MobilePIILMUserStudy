@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, contact info, and specific professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Basic details are standard, but full PII is premature for initial contact."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "External party is gathering a complete profile of the user's identity."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'success' and 'funding' as bait to encourage rapid disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Solicitation",
+        "Data Harvesting"
+      ],
+      "Explanation": "Requestor's identity and 'InnovateTech Ventures' remain unauthenticated."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with Sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS] and my phone number is [PHONE_NUMBER]. Is there anything else?",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Over-disclosure of contact information",
+      "Potential social engineering via 'Reciprocity' bait",
+      "Incomplete verification of the requester"
+    ],
+    "Explanation_NIST": "The message contains multiple PII categories as defined by NIST SP 800-122: Direct Identifiers (Full Name) and Linked Identifiers (Email, Phone Number, University Affiliation). The combination of these data points creates a high risk of identity theft or targeted phishing. The 'Gerald' persona uses a common social engineering tactic\u2014offering a high-value benefit (research funding) to bypass the user's natural caution. Providing all requested data in a single unencrypted message to an unverified external party facilitates secondary 'vishing' or 'spear-phishing' attacks using the university affiliation as a trust anchor.",
+    "Reasoning": "Sharing your full name, phone number, and email all at once is risky. This person reached out to you first, and sharing these private details could lead to unwanted contact or scams.",
+    "Rewrite": "I'm interested in discussing this further. My research focuses on Neural Networks and Cognitive Computing at Springfield University. To keep things secure, could you please share an official website or a formal calendar link where I can book a time for us to talk?"
+  }
+}

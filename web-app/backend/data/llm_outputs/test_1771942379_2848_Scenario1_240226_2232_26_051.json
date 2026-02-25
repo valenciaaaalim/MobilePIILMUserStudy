@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "High-impact combination of full name, birth date, and physical address."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Legitimate companies use secure HR platforms for sensitive background data."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Suspiciously rapid progression from greeting to requesting high-risk personal data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Leverages career advancement to bypass normal privacy precautions and concerns."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified_Recruiter",
+        "Insecure_Channel",
+        "Pretexting"
+      ],
+      "Explanation": "Unverified sender; lacks official documentation or secure submission methods."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Direct disclosure of identity-theft-grade information",
+      "Potential job-scam social engineering",
+      "Insecure data transmission method"
+    ],
+    "Explanation_NIST": "The draft message contains PII categorized under NIST SP 800-122 as Direct Identifiers (Full Name) and Quasi-identifiers (Date of Birth and Physical Address). The combination of these specific data points significantly increases the risk of identity theft and unauthorized profiling. The context indicates a 'pretexting' social engineering attack, where the requester uses a professional opportunity to solicit sensitive data through an informal, unencrypted channel. Following NIST recommendations, this data should be protected with high confidentiality as it can be used to link to other sensitive records.",
+    "Reasoning": "Sharing your full name, birth date, and home address in a chat is very risky. These details could be used by someone to pretend to be you. It is much safer to ask for a secure company website to submit this information.",
+    "Rewrite": "I'm definitely interested in the opportunity. To keep my information secure, could you provide a link to your official company portal or a secure background check site where I can submit these details?"
+  }
+}

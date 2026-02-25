@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Contains full name, email, and phone number linked to professional identity."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "While relevant for funding, verifying the requester's identity should precede data sharing."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "External party is gathering structured data through a potentially unsolicited outreach."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The 'funding' offer creates a positive incentive to comply quickly."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Authority",
+        "Data Harvesting Pattern"
+      ],
+      "Explanation": "Request involves significant personal data without a formal, secure application portal."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS] and my phone number is [PHONE_NUMBER]. Is there anything else?",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of multiple direct identifiers",
+      "Social engineering through financial incentive",
+      "Lack of verification for the requesting party"
+    ],
+    "Explanation_NIST": "The message discloses multiple PII categories as defined by NIST SP 800-122: Full Name (Direct Identifier), Educational Affiliation (Quasi-identifier), and personal contact information (Email/Phone). The context of an unverified funding offer ('Gerald' from 'InnovateTech Ventures') suggests a social engineering tactic where high-sensitivity data is harvested by exploiting the user's professional aspirations. The risk is 'High' because the combination of these fields allows for immediate identity theft or targeted phishing.",
+    "Reasoning": "Sharing your private contact details and full identity with someone you just met online is risky. They are using the promise of money to get your personal information quickly.",
+    "Rewrite": "I'm definitely interested in discussing this further. Could you please send me an official link to your organization's website or a formal funding application portal where I can provide my professional details securely?"
+  }
+}

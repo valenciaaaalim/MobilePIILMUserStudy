@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Combines full name with specific institutional affiliation and research niche."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Standard for funding inquiries but premature for an unverified contact."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Direct response to a request for personal and professional identifiers."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The promise of funding creates a strong incentive to comply quickly."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external source",
+        "Solicitation of PII"
+      ],
+      "Explanation": "The sender's identity and 'InnovateTech Ventures' have not been authenticated."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'.",
+    "Risk_Level": "MEDIUM",
+    "Primary_Risk_Factors": [
+      "Targeted data collection via financial incentive",
+      "Potential phishing/vishing precursor",
+      "Lack of out-of-band identity verification"
+    ],
+    "Explanation_NIST": "The message contains 'Direct Identifiers' (Full Name) and 'Quasi-identifiers' (University Affiliation, Research Area) as defined by NIST SP 800-122. While these are often public, providing them in response to an unsolicited financial offer increases the risk of 'Linkability.' A malicious actor could use this confirmed dataset to build a profile for more sophisticated social engineering or to gain unauthorized access to institutional resources by impersonating the user.",
+    "Reasoning": "While this information seems public, sharing it with a stranger promising money is risky. They might be using the offer to collect your details for a scam.",
+    "Rewrite": "I'm interested in learning more about InnovateTech Ventures. Could you please send more information about the funding program or a link to your official portal first?"
+  }
+}

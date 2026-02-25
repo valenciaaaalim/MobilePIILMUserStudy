@@ -41,6 +41,8 @@ This is a web application for user testing of the WhatsApp risk assessment syste
    Create a `.env` file:
    ```env
    GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL_NAME=gemini-3-flash-preview
+   GEMINI_TIMEOUT_SECONDS=30
    DATABASE_URL=sqlite:///./web_app.db
    FRONTEND_URL=http://localhost:3000
    ```
@@ -50,7 +52,7 @@ This is a web application for user testing of the WhatsApp risk assessment syste
    python seed_data.py
    ```
    
-   This will load conversations from `../../annotated_test.json` (the root of the repository).
+   This initializes DB tables only. Seed conversations are served from `web-app/backend/app/assets/annotated_test.json` at runtime.
 
 6. **Run the backend:**
    ```bash
@@ -84,28 +86,92 @@ The frontend will be available at `http://localhost:3000`.
 
 ### Docker Compose Setup (Recommended)
 
-1. **Set environment variables:**
+1. **Configure Docker Desktop (macOS):**
+   To ensure containers continue running after quitting Docker Desktop:
+   - Open Docker Desktop
+   - Go to **Settings** (gear icon) → **General**
+   - Enable **"Start Docker Desktop when you log in"** (optional but recommended)
+   - Go to **Settings** → **Resources** → **Advanced**
+   - Ensure Docker Desktop is set to keep the daemon running
+   - **Important**: On macOS, Docker Desktop can be quit from the menu bar, but the Docker daemon will continue running in the background by default. Containers will keep running as long as the daemon is active.
+
+2. **Set environment variables:**
    Create a `.env` file in the `web-app` directory:
    ```env
    GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL_NAME=gemini-3-flash-preview
+   GEMINI_TIMEOUT_SECONDS=30
    ```
 
-2. **Build and start services:**
+3. **Start services in detached mode (runs in background):**
    ```bash
    cd web-app
-   docker-compose up --build
+   docker-compose up -d --build
    ```
+   
+   The `-d` flag runs containers in detached mode, so they continue running even after you close the terminal.
 
-3. **Seed the database:**
+4. **Seed the database:**
    ```bash
    docker-compose exec web-app-backend python seed_data.py
    ```
 
-The backend will be available at `http://localhost:8000` and frontend at `http://localhost:3000` (if you run it separately).
+5. **View logs (optional):**
+   ```bash
+   # View all logs
+   docker-compose logs -f
+   
+   # View logs for specific service
+   docker-compose logs -f web-app-backend
+   docker-compose logs -f web-app-frontend
+   ```
+
+The backend will be available at `http://localhost:8000` and frontend at `http://localhost:3000`.
+
+### Docker Container Management
+
+**Start containers:**
+```bash
+cd web-app
+docker-compose up -d
+```
+
+**Stop containers:**
+```bash
+cd web-app
+docker-compose down
+```
+
+**Stop and remove volumes (clears database):**
+```bash
+docker-compose down -v
+```
+
+**Restart containers:**
+```bash
+docker-compose restart
+```
+
+**Check container status:**
+```bash
+docker-compose ps
+```
+
+**View running containers:**
+```bash
+docker ps
+```
+
+**Note**: Containers started with `docker-compose up -d` will continue running even if you:
+- Close the terminal window
+- Quit Docker Desktop GUI (on macOS, the daemon keeps running)
+- Log out and log back in (if Docker Desktop is set to start on login)
+
+To completely stop containers, use `docker-compose down` in the terminal.
 
 ## Database Seeding
 
-The seed script loads conversations from `annotated_test.json` in the repository root:
+Seed conversations are loaded at runtime from `web-app/backend/app/assets/annotated_test.json`:
 
 ```bash
 cd web-app/backend

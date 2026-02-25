@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, birth date, and exact residential address."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Official background checks should use secure portals, not chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Moving toward potential identity theft via unsolicited data collection."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses professional opportunity and compliance requirements to justify urgency."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Out-of-Band Data Request"
+      ],
+      "Explanation": "Requesting sensitive details via informal chat is a major red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], june 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of highly sensitive personal identifiers",
+      "Potential social engineering via a fake job recruitment pretext",
+      "Insecure transmission channel for background check data"
+    ],
+    "Explanation_NIST": "The message contains a high-impact combination of PII categories defined in NIST SP 800-122: Full Name (Direct Identifier), Date of Birth (Quasi-identifier), and Street Address (Quasi-identifier). The combination of these elements significantly increases the risk of 'Linkability,' allowing an adversary to perform identity theft. Contextually, the 'Recruiter' (Una) is using a professional 'Authority' and 'Commitment' social engineering trigger to bypass standard security protocols. Requesting such a data cluster within a masked chat environment rather than an encrypted HRIS portal is a classic indicator of a phishing or social engineering attempt.",
+    "Reasoning": "Sharing your full name, birth date, and home address in a chat is very risky. Real companies use secure, official websites for background checks rather than asking for this in a message. You should verify this person's identity before providing any private details.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my personal details over chat. Do you have a secure company portal or an official application link where I can submit my information for a background check?"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Email is a direct identifier often used for targeted phishing attacks."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Official contact details are unnecessary before verifying the sender's identity."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The sender is systematically collecting a bundle of personal data points."
+    },
+    "Psychological_Pressure": {
+      "Level": "HIGH",
+      "Explanation": "The promise of research funding creates a strong financial incentive."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Cold Outreach",
+        "Financial Lure",
+        "Data Harvesting"
+      ],
+      "Explanation": "Generic company name and unsolicited funding offer are classic social engineering."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Certainly [FIRST_NAME]! my email is [EMAIL_ADDRESS]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Social Engineering Lure",
+      "Unverified Sender Identity",
+      "Information Harvesting"
+    ],
+    "Explanation_NIST": "The draft message discloses a direct identifier ([EMAIL_ADDRESS]) as defined by NIST SP 800-122. In the context of the conversation history, this disclosure is part of a larger PII cluster (name, university, research area) requested by an unverified source. The sender uses 'Liking' and 'Reciprocity' triggers by offering funding to lower the user's defensive posture. Sharing contact info at this stage facilitates potential spear-phishing or identity exploitation.",
+    "Reasoning": "You are giving your personal contact info to someone who contacted you unexpectedly. Offering money for your research is a common trick used to get people to share private information. It is better to verify who they are before sending any details.",
+    "Rewrite": "I am interested in discussing this, but I'd like to verify your organization first. Could you provide a link to your official website or LinkedIn profile?"
+  }
+}

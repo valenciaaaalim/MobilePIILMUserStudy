@@ -4,23 +4,19 @@ Main FastAPI application for the web app backend.
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
 import logging
 import threading
-import time
 
 from app.config import settings
-from app.database import init_db, migrate_participant_records_columns, reorder_participant_records_columns
+from app.database import init_db, get_table_info
 from app.middleware.security import SecurityHeadersMiddleware
 from app.routers import (
     participants,
-    conversations,
     risk_assessment,
-    user_inputs,
-    surveys,
-    completion,
-    participant_records,
-    pii
+    participant_data,
+    pii,
+    consent,
+    completion
 )
 
 # Configure logging
@@ -31,7 +27,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="WhatsApp Risk Assessment Web App",
     description="Web application for user testing of WhatsApp risk assessment",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # Security headers middleware
@@ -50,13 +46,11 @@ app.add_middleware(
 
 # Include routers
 app.include_router(participants.router)
-app.include_router(conversations.router)
 app.include_router(risk_assessment.router)
-app.include_router(user_inputs.router)
-app.include_router(surveys.router)
-app.include_router(completion.router)
-app.include_router(participant_records.router)
+app.include_router(participant_data.router)
 app.include_router(pii.router)
+app.include_router(consent.router)
+app.include_router(completion.router)
 
 
 @app.on_event("startup")
@@ -65,11 +59,14 @@ async def startup_event():
     logger.info("Starting up application...")
     try:
         init_db()
-        logger.info("Database initialized")
-        migrate_participant_records_columns()
-        logger.info("Database migration completed")
-        reorder_participant_records_columns()
-        logger.info("Database reorder migration completed")
+        logger.info("Database initialized with 8 normalized tables")
+        
+        # Log table info for debugging
+        table_info = get_table_info()
+        for table_name, info in table_info.items():
+            logger.info(f"  - {table_name}: {info['row_count']} rows, {len(info['columns'])} columns")
+        
+        # Warm up GLiNER model in background
         def warm_pii_model():
             try:
                 pii.get_gliner_service()
@@ -87,8 +84,14 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }
+
+
+@app.get("/db-info")
+async def db_info():
+    """Get database table information (for debugging)."""
+    return get_table_info()
 
 
 @app.exception_handler(Exception)

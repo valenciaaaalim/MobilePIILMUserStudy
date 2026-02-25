@@ -14,189 +14,453 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
   const [messages, setMessages] = useState([]);
   const [draftText, setDraftText] = useState('');
   const [warningState, setWarningState] = useState(null);
+  const [lastRiskAnalysis, setLastRiskAnalysis] = useState(null);
+  const [riskPending, setRiskPending] = useState(false);
+  const [isWarningOpen, setIsWarningOpen] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [preClickText, setPreClickText] = useState('');
-  const [lastOfferedRewrite, setLastOfferedRewrite] = useState(null); // Track last offered rewrite for Group A
+  const [lastOfferedRewrite, setLastOfferedRewrite] = useState(null);
+  const [lastShownRewrite, setLastShownRewrite] = useState(null);
+  const [lastMaskedText, setLastMaskedText] = useState(null);
+  const [lastRawText, setLastRawText] = useState(null);
+  const [lastHasPii, setLastHasPii] = useState(false);
+  const [lastAssessedText, setLastAssessedText] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [maskedHistory, setMaskedHistory] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const typingTimeoutRef = useRef(null);
+  const riskRequestCounterRef = useRef(0);
+  const sendInFlightRef = useRef(false);
+  const assessAbortControllersRef = useRef({ pii: null, risk: null });
+
+  const instructionSets = [
+    {
+      title: 'Scenario 1',
+      content: [
+        { type: 'paragraph', body: <>Please imagine that you are <strong>Kimberly</strong> in this conversation and continue the interaction as realistically as possible.</> },
+        { type: 'paragraph', body: <>The suggested reply shows the intended goal of the response and may be copied directly to keep the intended goal of the response.</> },
+        { type: 'bubble', label: 'Reference text', text: <>Here's my information: Kimberly Miller, June 15, 1986, 42 Maple Street, Springfield, IL.</>},
+        { type: 'paragraph', body: <>Take on the role fully and interact naturally with the interface as you type.</> }
+      ]
+    },
+    {
+      title: 'Scenario 2',
+      content: [
+        { type: 'paragraph', body: <>Please imagine that you are <strong>Daniel</strong> in this conversation and continue the interaction as realistically as possible.</> },
+        { type: 'paragraph', body: <>The suggested reply shows the intended goal of the response and may be copied directly to keep the intended goal of the response.</> },
+        { type: 'bubble', label: 'Reference text', text: <>Certainly, Gerald! My full name is Daniel Thompson. I'm affiliated with Springfield University, and my research area is 'Neural Networks and Cognitive Computing.' My current project involves developing algorithms that improve decision-making processes for autonomous systems. I'll send my university email and phone number too. My email is daniel.thompson@springfield.edu, and my phone number is 555-526-7890. Is there anything else you need?</> },
+        { type: 'paragraph', body: <>Take on the role fully and interact naturally with the interface as you type.</> }
+      ]
+    },
+    {
+      title: 'Scenario 3',
+      content: [
+        { type: 'paragraph', body: <>Please imagine that you are <strong>Matthew</strong> in this conversation and continue the interaction as realistically as possible.</> },
+        { type: 'paragraph', body: <>The suggested reply shows the intended goal of the response and may be copied directly to keep the intended goal of the response.</> },
+        { type: 'bubble', label: 'Reference text', text: <>I understand the need for verification. I'll send you my work email and that should suffice. It's matthew_1968@gmail.com</> },
+        { type: 'paragraph', body: <>Take on the role fully and interact naturally with the interface as you type.</> }
+      ]
+    }
+  ];
+  const scenarioInstructions = instructionSets[conversationIndex];
 
   useEffect(() => {
-    // Initialize messages from conversation data
-    // Show all messages with proper directions from the JSON
-    // Messages alternate: contact (RECEIVED) -> user (SENT) -> contact (RECEIVED) -> etc.
     const allMessages = conversation.conversation || [];
-    
-    // Show all messages with their correct directions
-    // Pre-existing user messages (SENT) from JSON will be shown as green bubbles on right
-    // Contact messages (RECEIVED) will be shown as white bubbles on left
     const initialMessages = allMessages.map((msg, idx) => ({
       ...msg,
       timestamp: new Date(Date.now() - (allMessages.length - idx) * 60000)
     }));
-    
+
     setMessages(initialMessages);
-    
-    // Set message index to track where we are (all messages are already shown)
     setCurrentMessageIndex(allMessages.length);
+    setIsDrawerOpen(true);
+    setWarningState(null);
+    setLastRiskAnalysis(null);
+    setRiskPending(false);
+    setIsWarningOpen(false);
+    setLastAssessedText('');
+
+    const historyForMasking = initialMessages.map((m) => ({
+      id: m.id,
+      text: m.text,
+      direction: m.direction,
+      name: m.name || null,
+      timestamp: m.timestamp || null
+    }));
+
+    let cancelled = false;
+    const separator = '\n<<<MSG_SEPARATOR>>>\n';
+    const serializedHistory = historyForMasking.map((m) => m.text || '').join(separator);
+    axios.post(
+      `${API_BASE_URL}/pii/detect`,
+      { draft_text: serializedHistory },
+      { timeout: 30000 }
+    )
+      .then((response) => {
+        if (cancelled) return;
+        const maskedText = response.data?.masked_text;
+        if (!maskedText) {
+          setMaskedHistory(historyForMasking);
+          return;
+        }
+        const maskedParts = maskedText.split(separator);
+        const rebuiltHistory = historyForMasking.map((m, idx) => ({
+          ...m,
+          text: maskedParts[idx] !== undefined ? maskedParts[idx] : m.text
+        }));
+        setMaskedHistory(rebuiltHistory);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMaskedHistory(historyForMasking);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [conversation]);
+
+  const handleToggleDrawer = () => {
+    setIsDrawerOpen((open) => !open);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+  };
+
+  const abortActiveAssessRequests = () => {
+    const { pii, risk } = assessAbortControllersRef.current;
+    if (pii) {
+      pii.abort();
+    }
+    if (risk) {
+      risk.abort();
+    }
+    assessAbortControllersRef.current = { pii: null, risk: null };
+  };
+
+  const isCanceledRequest = (error) => (
+    error?.code === 'ERR_CANCELED'
+    || error?.name === 'CanceledError'
+    || error?.name === 'AbortError'
+  );
 
   const handleTyping = (text) => {
     setDraftText(text);
-    setPreClickText(text); // Capture pre-click text
-    
-    // Clear previous timeout
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    
-    // Debounce risk assessment
+
+    // New text input should immediately invalidate/abort prior analysis.
+    riskRequestCounterRef.current += 1;
+    abortActiveAssessRequests();
+    setRiskPending(false);
+
     if (text.trim()) {
       typingTimeoutRef.current = setTimeout(() => {
         assessRisk(text);
-      }, 1000);
+      }, 800);
     } else {
       setWarningState(null);
+      setLastRiskAnalysis(null);
+      setRiskPending(false);
+      setIsWarningOpen(false);
+      setLastOfferedRewrite(null);
+      setLastShownRewrite(null);
+      setLastMaskedText(null);
+      setLastRawText(null);
+      setLastHasPii(false);
+      setLastAssessedText('');
     }
   };
 
-  const assessRisk = async (text) => {
+  const handlePiiDetected = (piiData) => {
+    if (!piiData) return;
+    const sourceText = piiData.sourceText || draftText;
+    setLastRawText(sourceText);
+    setLastMaskedText(piiData.maskedText || null);
+    setLastHasPii(Boolean(piiData.hasPii));
+  };
+
+  const toSingleLineReasoning = (value) => {
+    const cleaned = (value || '').replace(/\s+/g, ' ').trim();
+    if (!cleaned) return '';
+    const firstSentence = cleaned.split(/(?<=[.!?])\s+/)[0];
+    return firstSentence.length > 180 ? `${firstSentence.slice(0, 177)}...` : firstSentence;
+  };
+
+  const assessRisk = async (text, options = {}) => {
+    const textToUse = text.trim();
+    const { openOnComplete = false, silent = false } = options;
+    if (!textToUse) return null;
+
+    const requestId = ++riskRequestCounterRef.current;
+    if (!silent) {
+      setRiskPending(true);
+      if (openOnComplete) {
+        setIsWarningOpen(true);
+      }
+    }
+    // A new assessment should always cancel any prior in-flight analysis calls.
+    abortActiveAssessRequests();
+
+    let maskedToUse = null;
+    let hasPii = variant !== 'A';
+    let piiController = null;
+    let riskController = null;
+
+    if (variant === 'A') {
+      if (lastRawText && lastRawText.trim() === textToUse) {
+        maskedToUse = lastMaskedText;
+        hasPii = lastHasPii;
+      } else {
+        try {
+          piiController = new AbortController();
+          assessAbortControllersRef.current.pii = piiController;
+          const piiResponse = await axios.post(
+            `${API_BASE_URL}/pii/detect`,
+            { draft_text: textToUse },
+            { timeout: 30000, signal: piiController.signal }
+          );
+          if (requestId !== riskRequestCounterRef.current) {
+            return null;
+          }
+          const spans = piiResponse.data?.pii_spans || [];
+          maskedToUse = piiResponse.data?.masked_text || null;
+          hasPii = spans.length > 0;
+          setLastRawText(textToUse);
+          setLastMaskedText(maskedToUse);
+          setLastHasPii(hasPii);
+        } catch (error) {
+          if (isCanceledRequest(error)) {
+            return null;
+          }
+          console.error('[RISK] PII detection failed for risk assessment:', error);
+          hasPii = false;
+          maskedToUse = null;
+        }
+      }
+
+      if (!hasPii) {
+        if (!silent) {
+          setWarningState(null);
+          setLastRiskAnalysis(null);
+          setLastOfferedRewrite(null);
+          setLastShownRewrite(null);
+          setLastAssessedText(textToUse);
+          setRiskPending(false);
+          if (!openOnComplete) {
+            setIsWarningOpen(false);
+          }
+        }
+        return null;
+      }
+    }
+
     try {
-      const conversationHistory = messages.map(m => m.text);
+      const conversationHistory = messages.map((m) => ({
+        id: m.id,
+        text: m.text,
+        direction: m.direction,
+        name: m.name || null,
+        timestamp: m.timestamp || null
+      }));
+
+      riskController = new AbortController();
+      assessAbortControllersRef.current.risk = riskController;
       const response = await axios.post(`${API_BASE_URL}/api/risk/assess`, {
-        draft_text: text,
+        draft_text: textToUse,
+        masked_text: maskedToUse,
+        masked_history: maskedHistory || conversationHistory,
         conversation_history: conversationHistory,
-        session_id: sessionId
-      });
-      
-      if (response.data.show_warning && 
-          (response.data.risk_level === 'MEDIUM' || response.data.risk_level === 'HIGH')) {
-        const rewrite = response.data.safer_rewrite;
-        setWarningState({
-          riskLevel: response.data.risk_level,
-          explanation: response.data.explanation,
-          saferRewrite: rewrite,
-          primaryRiskFactors: response.data.primary_risk_factors
-        });
-        // Track offered rewrite for Group A
-        if (variant === 'A' && rewrite) {
+        session_id: conversationIndex + 1,
+        participant_prolific_id: participantProlificId || null
+      }, { signal: riskController.signal });
+
+      if (requestId !== riskRequestCounterRef.current) {
+        return null;
+      }
+
+      const rewrite = response.data.safer_rewrite || '';
+      const assessment = {
+        riskLevel: response.data.risk_level,
+        saferRewrite: rewrite,
+        primaryRiskFactors: response.data.primary_risk_factors || [],
+        explanationNist: response.data.Explanation_NIST || response.data.explanation || response.data.output_2?.Explanation_NIST || response.data.output_2?.explanation || '',
+        reasoning: toSingleLineReasoning(
+          response.data.Reasoning || response.data.reasoning_steps || response.data.output_2?.Reasoning || response.data.output_2?.reasoning_steps || ''
+        ),
+        thoughtSummary:
+          response.data.Thought_Summary
+          || response.data.output_2?.Thought_Summary
+          || response.data.output_2?.thought_summary
+          || '',
+        originalInput: response.data.output_2?.original_user_message || maskedToUse || textToUse,
+        output1: response.data.output_1 || {},
+        output2: response.data.output_2 || {}
+      };
+
+      if (!silent) {
+        setWarningState(assessment);
+        setLastRiskAnalysis(assessment);
+        setLastAssessedText(textToUse);
+
+        if (variant === 'A' && rewrite && rewrite.trim() && rewrite.trim() !== textToUse) {
           setLastOfferedRewrite(rewrite);
         }
-      } else {
-        setWarningState(null);
-        setLastOfferedRewrite(null);
+
+        if (openOnComplete) {
+          setIsWarningOpen(true);
+          if (rewrite && rewrite.trim()) {
+            setLastShownRewrite(rewrite);
+          }
+        }
       }
+
+      return assessment;
     } catch (error) {
-      console.error('Error assessing risk:', error);
+      if (isCanceledRequest(error)) {
+        return null;
+      }
+      if (!silent && requestId === riskRequestCounterRef.current) {
+        console.error('Error assessing risk:', error);
+        setWarningState(null);
+        setLastRiskAnalysis(null);
+        if (!openOnComplete) {
+          setIsWarningOpen(false);
+        }
+      }
+      return null;
+    } finally {
+      if (piiController && assessAbortControllersRef.current.pii === piiController) {
+        assessAbortControllersRef.current.pii = null;
+      }
+      if (riskController && assessAbortControllersRef.current.risk === riskController) {
+        assessAbortControllersRef.current.risk = null;
+      }
+      if (!silent && requestId === riskRequestCounterRef.current) {
+        setRiskPending(false);
+      }
+    }
+  };
+
+  const handleOpenWarning = async () => {
+    const textToUse = draftText.trim();
+    if (!textToUse) {
+      return;
+    }
+
+    // Prevent a pending debounce-triggered assessment from racing and
+    // overriding the explicit icon-click assessment request.
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    abortActiveAssessRequests();
+
+    setIsWarningOpen(true);
+
+    if (!warningState || lastAssessedText !== textToUse) {
+      const assessment = await assessRisk(textToUse, { openOnComplete: true });
+      if (assessment?.saferRewrite) {
+        setLastShownRewrite(assessment.saferRewrite);
+      }
     }
   };
 
   const handleSend = async () => {
-    if (!draftText.trim()) return;
-    
-    const finalText = draftText.trim();
-    console.log('[Send] clicked', { variant, length: finalText.length });
-    
-    // For Group A: Get PII detection results and determine rewrite status
-    let finalRawText = null;
-    let finalMaskedText = null;
-    let finalRewriteText = null;
-    
-    if (variant === 'A') {
-      finalRawText = preClickText || draftText.trim(); // Use pre-click text if available, otherwise current draft
-      
-      // Get PII masked text
-      try {
-        const piiResponse = await axios.post(
-          `${API_BASE_URL}/pii/detect`,
-          { draft_text: finalRawText },
-          { timeout: 30000 }
-        );
-        finalMaskedText = piiResponse.data.masked_text || null;
-        console.log('[PII] detect for storage success', {
-          spans: piiResponse.data?.pii_spans?.length || 0
-        });
-      } catch (error) {
-        console.error('[PII] detect for storage error', error);
-      }
-      
-      // Determine rewrite status
-      if (lastOfferedRewrite) {
-        // Check if rewrite was accepted (finalText matches the rewrite)
-        if (finalText === lastOfferedRewrite.trim()) {
-          finalRewriteText = lastOfferedRewrite; // Rewrite was accepted
-        } else {
-          finalRewriteText = 'Rewrite'; // Rewrite was offered but ignored
-        }
-      }
-    }
-    
-    // Capture user input
-    try {
-      const messagePayload = {
-        participant_id: participantProlificId,
-        conversation_index: conversationIndex,
-        final_message: finalText,
-        variant
-      };
-      
-      // Add Group A PII fields
-      if (variant === 'A') {
-        messagePayload.final_raw_text = finalRawText;
-        messagePayload.final_masked_text = finalMaskedText;
-        if (finalRewriteText) {
-          messagePayload.final_rewrite_text = finalRewriteText;
-        }
-      }
-      
-      await axios.post(`${API_BASE_URL}/api/participant-records/message`, messagePayload);
+    if (!draftText.trim() || sendInFlightRef.current) return;
 
-      if (warningState) {
-        await axios.post(`${API_BASE_URL}/api/user-inputs/with-warning`, {
-          session_id: sessionId,
-          message_index: currentMessageIndex,
-          action_type: 'ignore',
-          pre_click_text: preClickText,
-          final_submitted_text: finalText,
-          risk_level: warningState.riskLevel,
-          warning_explanation: warningState.explanation,
-          safer_rewrite_offered: warningState.saferRewrite
-        });
-      } else {
-        await axios.post(`${API_BASE_URL}/api/user-inputs`, {
-          session_id: sessionId,
-          message_index: currentMessageIndex,
-          action_type: 'none',
-          pre_click_text: preClickText,
-          final_submitted_text: finalText
-        });
-      }
-    } catch (error) {
-      console.error('[Send] error capturing user input', error);
-    }
-    
-    // Add message to list
+    sendInFlightRef.current = true;
+    setIsSending(true);
+    riskRequestCounterRef.current += 1;
+    abortActiveAssessRequests();
+
+    const finalText = draftText.trim();
+    let analysis = warningState || lastRiskAnalysis;
+
     const newMessage = {
       id: `sent-${Date.now()}`,
       text: finalText,
       direction: 'SENT',
       timestamp: new Date()
     };
-    
-    setMessages([...messages, newMessage]);
+
+    // Optimistic UI update keeps send interaction responsive.
+    setMessages((prev) => [...prev, newMessage]);
     setDraftText('');
     setWarningState(null);
-    setLastOfferedRewrite(null); // Reset rewrite tracking
-    setCurrentMessageIndex(currentMessageIndex + 1);
-    
-    // Since we're showing all messages from the start, 
-    // user typing new messages means they're continuing the conversation
-    // Check if we should show completion or allow more messages
+    setLastRiskAnalysis(null);
+    setRiskPending(false);
+    setLastOfferedRewrite(null);
+    setLastShownRewrite(null);
+    setIsWarningOpen(false);
+    setLastAssessedText('');
+    setCurrentMessageIndex((prev) => prev + 1);
+
+    if (variant === 'A' && (!analysis || lastAssessedText !== finalText)) {
+      const refreshed = await assessRisk(finalText, { openOnComplete: false, silent: true });
+      if (refreshed) {
+        analysis = refreshed;
+      }
+    }
+
+    const originalInput = analysis?.originalInput || finalText;
+    const finalMaskedText = (lastRawText && lastRawText.trim() === finalText)
+      ? lastMaskedText
+      : null;
+    const finalRewriteText = analysis?.saferRewrite || warningState?.saferRewrite || lastShownRewrite || lastOfferedRewrite;
+
+    try {
+      const output1 = analysis?.output1 || {};
+
+      const messagePayload = {
+        participant_id: participantProlificId,
+        conversation_index: conversationIndex,
+        final_message: finalText,
+        variant
+      };
+
+      if (variant === 'A') {
+        messagePayload.original_input = originalInput;
+        messagePayload.final_masked_text = finalMaskedText;
+        if (finalRewriteText) {
+          messagePayload.final_rewrite_text = finalRewriteText;
+        }
+      }
+
+      if (analysis) {
+        messagePayload.risk_level = analysis.riskLevel || null;
+        messagePayload.primary_risk_factors = analysis.primaryRiskFactors || [];
+        messagePayload.Explanation_NIST = analysis.explanationNist || '';
+        messagePayload.Reasoning = analysis.reasoning || '';
+        messagePayload.Thought_Summary = analysis.thoughtSummary || '';
+
+        messagePayload.pii_sensitivity_level = output1.pii_sensitivity?.level || null;
+        messagePayload.pii_sensitivity_explanation = output1.pii_sensitivity?.explanation || null;
+        messagePayload.contextual_necessity_level = output1.contextual_necessity?.level || null;
+        messagePayload.contextual_necessity_explanation = output1.contextual_necessity?.explanation || null;
+        messagePayload.intent_trajectory_level = output1.intent_trajectory?.level || null;
+        messagePayload.intent_trajectory_explanation = output1.intent_trajectory?.explanation || null;
+        messagePayload.psychological_pressure_level = output1.psychological_pressure?.level || null;
+        messagePayload.psychological_pressure_explanation = output1.psychological_pressure?.explanation || null;
+        messagePayload.identity_trust_signals_flags = output1.identity_trust_signals?.flags || [];
+        messagePayload.identity_trust_signals_explanation = output1.identity_trust_signals?.explanation || null;
+      }
+
+      await axios.post(`${API_BASE_URL}/api/participants/message`, messagePayload);
+    } catch (error) {
+      console.error('[Send] error capturing user input', error);
+    } finally {
+      sendInFlightRef.current = false;
+      setIsSending(false);
+    }
+
     const allMessages = conversation.conversation || [];
-    const userTypedMessages = messages.filter(m => m.id && m.id.startsWith('sent-')).length;
-    
-    // If user has typed a few messages, consider conversation complete
-    // Or check if we've reached the end of the conversation flow
+    const userTypedMessages = messages.filter((m) => m.id && m.id.startsWith('sent-')).length;
+
     if (userTypedMessages > 0 || currentMessageIndex >= allMessages.length) {
-      // Conversation complete - wait a bit then show survey
       setTimeout(() => {
         onComplete();
         navigate(`/survey/mid?index=${conversationIndex}`);
@@ -207,46 +471,107 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
   const handleAcceptRewrite = () => {
     if (warningState && warningState.saferRewrite) {
       setDraftText(warningState.saferRewrite);
-      // Keep lastOfferedRewrite so we can track that it was accepted on send
-      setWarningState(null);
+      setLastShownRewrite(warningState.saferRewrite);
     }
+    setIsWarningOpen(false);
   };
 
-  const handleContinueAnyway = async () => {
-    setWarningState(null);
-    // Keep lastOfferedRewrite so we can track that rewrite was offered but ignored
-    // User continues with original text, which will be captured on send
+  const handleContinueAnyway = () => {
+    // Allow user to exit immediately even while analysis is still pending.
+    // Bump request counter so stale in-flight responses are ignored.
+    if (riskPending) {
+      riskRequestCounterRef.current += 1;
+      setRiskPending(false);
+    }
+    abortActiveAssessRequests();
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    setIsWarningOpen(false);
   };
 
-  // Get contact name from conversation data (first received message's name)
+  useEffect(() => () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    abortActiveAssessRequests();
+  }, []);
+
   const getContactName = () => {
     const convData = conversation.conversation || [];
-    const firstReceived = convData.find(m => m.direction === 'RECEIVED');
+    const firstReceived = convData.find((m) => m.direction === 'RECEIVED');
     const fullName = firstReceived?.name || 'Contact';
-    // Remove occupation description (everything after " - " or " | ")
     const nameOnly = fullName.split(' - ')[0].split(' | ')[0].trim();
     return nameOnly;
   };
-  
+
   const contactName = getContactName();
 
   return (
     <div className="conversation-screen">
       <ChatHeader contactName={contactName} scenario={conversation.scenario} />
-      <MessageList messages={messages} />
+      <MessageList messages={messages} conversationKey={conversationIndex} />
       <ChatComposer
         draftText={draftText}
         onTextChange={handleTyping}
         onSend={handleSend}
         variant={variant}
+        onPiiClick={handleOpenWarning}
+        onPiiDetected={handlePiiDetected}
+        isSending={isSending}
       />
-      {warningState && (
+      {isWarningOpen && (riskPending || warningState) && (
         <WarningModal
           warningState={warningState}
+          riskPending={riskPending}
           onAcceptRewrite={handleAcceptRewrite}
           onContinueAnyway={handleContinueAnyway}
         />
       )}
+
+      {isDrawerOpen && <div className="drawer-overlay" onClick={handleCloseDrawer} />}
+
+      <div className={`instructions-drawer ${isDrawerOpen ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="drawer-tab"
+          onClick={handleToggleDrawer}
+        >
+          {isDrawerOpen ? 'Close' : 'Instructions'}
+        </button>
+        <div className="drawer-panel">
+          <div className="drawer-header">
+            <h2>{scenarioInstructions?.title || ''}</h2>
+            <button
+              type="button"
+              className="drawer-close-button"
+              onClick={handleCloseDrawer}
+            >
+              Close
+            </button>
+          </div>
+          <div className="drawer-content">
+            {(scenarioInstructions?.content || []).map((item, idx) => {
+              if (item.type === 'bubble') {
+                if (!item.text) return null;
+                return (
+                  <div key={`${conversationIndex}-instruction-bubble-${idx}`} className="instruction-bubble">
+                    <div className="instruction-bubble__label">{item.label || 'Reference text'}</div>
+                    <div className="instruction-bubble__message">
+                      {item.text}
+                    </div>
+                  </div>
+
+                );
+              }
+              return (
+                <p key={`${conversationIndex}-instruction-paragraph-${idx}`}>{item.body}</p>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

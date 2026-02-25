@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full names combined with addresses and birthdates create extreme identity theft risk."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Professional background checks must use secure portals, not informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The conversation follows a classic pattern for harvesting sensitive personal data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Using 'regulatory compliance' creates a false sense of urgency and authority."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Informal Channel",
+        "Suspicious Request"
+      ],
+      "Explanation": "A legitimate recruiter would never ask for sensitive data via chat."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME],",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Social Engineering (Recruitment Scam)",
+      "Unsecured Data Transfer"
+    ],
+    "Explanation_NIST": "The request from 'Una' involves multiple NIST SP 800-122 PII categories: Direct Identifiers (Full Name) and Quasi-identifiers (Date of Birth, Location Address). When linked, these categories present a high risk for identity theft. The context is highly suspicious as it mirrors social-engineering 'Recruitment Scams' where attackers use the 'Authority' and 'Liking' principles (impressed by profile, regulatory compliance) to bypass the user's natural caution. In a professional risk assessment, sharing this combination of data via an unencrypted, third-party chat interface is classified as high-risk behavior.",
+    "Reasoning": "Sharing your full name and home address in a chat is unsafe. Real companies use secure websites for background checks, not text messages. Ask for an official link to their system instead.",
+    "Rewrite": "I\u2019m interested in the role, but I don't share personal details like my address or birthdate over chat. Do you have a secure company portal where I can submit this information?"
+  }
+}

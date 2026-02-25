@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Full name is a direct identifier that facilitates further data aggregation."
+    },
+    "Contextual_Necessity": {
+      "Level": "HIGH",
+      "Explanation": "Providing identity details in unverified chat is unnecessary for initial discussions."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The conversation is leading toward requests for high-impact identity documents."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses professional compliance and job opportunity to create urgency and obligation."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified_Source",
+        "Insecure_Channel",
+        "High_Value_Data_Request"
+      ],
+      "Explanation": "Requesting sensitive info via chat instead of secure portals is suspicious."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME],",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Social Engineering Pretext",
+      "Insecure Communication Channel",
+      "Data Minimization Violation"
+    ],
+    "Explanation_NIST": "The user is responding to a request for PII categories defined in NIST SP 800-122, specifically Direct Identifiers (Full Name) and pending Quasi-identifiers (DOB, Location). The requester uses a common social engineering tactic ('Regulatory Compliance') to establish authority and justify the collection of high-confidentiality-impact data. Sending such information over a standard chat interface lacks the necessary administrative and technical safeguards (e.g., encryption, access controls) required for background check data.",
+    "Reasoning": "Providing your full name and other personal details over a simple chat message is unsafe. You should ask to use a secure website or an official company email to make sure the person is real.",
+    "Rewrite": "Before I share my personal details for a background check, could you provide a link to your company\u2019s secure portal or send this request to my email from your official company domain?"
+  }
+}

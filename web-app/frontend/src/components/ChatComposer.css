@@ -1,4 +1,7 @@
 .chat-composer {
+  --composer-input-line-height: 20px;
+  --composer-input-v-padding: 16px;
+  --composer-input-max-height: calc((var(--composer-input-line-height) * 5) + var(--composer-input-v-padding));
   background-color: #f0f0f0;
   padding: 8px;
   border-top: 1px solid #e0e0e0;
@@ -19,6 +22,48 @@
   min-height: 36px;
 }
 
+.pii-alert-bubble {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background-color: #ff6b6b;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 3;
+  transform-origin: center;
+  transition: background-color 0.2s;
+}
+
+.pii-alert-bubble:hover {
+  background-color: #ff4f4f;
+}
+
+.pii-alert-bubble--pulse {
+  animation: piiBubblePulse 220ms ease-out;
+}
+
+@keyframes piiBubblePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .pii-overlay {
   position: absolute;
   top: 0;
@@ -27,15 +72,22 @@
   bottom: 0;
   pointer-events: none;
   font-size: 15px;
-  line-height: 20px;
+  line-height: var(--composer-input-line-height);
   padding: 8px 0;
   font-family: inherit;
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  max-height: var(--composer-input-max-height);
   color: transparent;
   z-index: 1;
   box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+.pii-overlay::-webkit-scrollbar {
+  display: none;
 }
 
 .pii-underline {
@@ -50,8 +102,9 @@
   outline: none;
   resize: none;
   font-size: 15px;
-  line-height: 20px;
-  max-height: 100px;
+  line-height: var(--composer-input-line-height);
+  min-height: calc(var(--composer-input-line-height) + var(--composer-input-v-padding));
+  max-height: var(--composer-input-max-height);
   padding: 8px 0;
   font-family: inherit;
   position: relative;
@@ -59,6 +112,7 @@
   background: transparent;
   width: 100%;
   box-sizing: border-box;
+  overflow-y: hidden;
 }
 
 .send-button {
@@ -84,4 +138,3 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
-

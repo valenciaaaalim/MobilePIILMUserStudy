@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Contains full name, email, and phone number linked to professional identity."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "While relevant for funding, sharing all details at once is premature."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "A stranger is systematically collecting multiple high-value identifiers in one step."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses the promise of funding and success to bypass normal caution."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external source",
+        "Data harvesting pattern"
+      ],
+      "Explanation": "Solicitation from an unknown entity using 'cold call' tactics for PII."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS] and my phone number is [PHONE_NUMBER]. Is there anything else?",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of multiple direct identifiers",
+      "Potential phishing/social engineering via financial incentive",
+      "Unverified sender identity"
+    ],
+    "Explanation_NIST": "The message contains PII categorized under NIST SP 800-122 as Direct Identifiers (Full Name) and Linked Identifiers (Email, Phone, University Affiliation). The risk is elevated due to 'PII Aggregation' where a single response provides enough data for identity theft or targeted phishing. The context (cold outreach offering funding) is a classic social engineering 'Lure' using 'Authority' and 'Financial Gain' to extract data. The 'Intent Trajectory' suggests the sender is building a target profile.",
+    "Reasoning": "You are sharing a lot of private contact information with someone you just met online. This person is using the promise of money to get you to reveal these details quickly.",
+    "Rewrite": "I am a researcher at Springfield University specializing in Neural Networks. I would prefer to keep our conversation here for now; could you please share a formal proposal or a link to your organization's official website first?"
+  }
+}

@@ -1,198 +1,217 @@
 """
 Database models for the web app.
+Normalized schema with 7 tables for user study data.
 """
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON, Float, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, UniqueConstraint, Enum as SQLEnum, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
 from app.utils import get_singapore_time
-import json
+import enum
 
 
+class VariantEnum(str, enum.Enum):
+    A = "A"
+    B = "B"
+
+
+class PiiTypeEnum(str, enum.Enum):
+    phone_number = "phone_number"
+    home_address = "home_address"
+    email_address = "email_address"
+    date_of_birth = "date_of_birth"
+    workplace = "workplace"
+    government_id = "government_id"
+    financial_info = "financial_info"
+    none_disclosed = "none_disclosed"
+    other = "other"
+
+
+# =============================================================================
+# TABLE 1: participants - Core table
+# =============================================================================
 class Participant(Base):
-    """Participant/user model."""
+    """Participant/user model - Core table for the study."""
     __tablename__ = "participants"
     
     id = Column(Integer, primary_key=True, index=True)
     prolific_id = Column(String, unique=True, index=True, nullable=True)
-    variant = Column(String, nullable=False)  # 'A' or 'B'
-    completed_at = Column(DateTime(timezone=True), nullable=True)
+    variant = Column(String, nullable=False)  # 'A' or 'B' (stored as string for SQLite compatibility)
     created_at = Column(DateTime(timezone=True), default=get_singapore_time)
-    updated_at = Column(DateTime(timezone=True), default=get_singapore_time, onupdate=get_singapore_time)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    duration_seconds = Column(Float, nullable=True)  # Duration of study in seconds
+    is_complete = Column(Boolean, default=False)  # Whether participant completed the study
     
-    # Relationships
-    conversations = relationship("ConversationSession", back_populates="participant", cascade="all, delete-orphan")
-    survey_responses = relationship("SurveyResponse", back_populates="participant", cascade="all, delete-orphan")
+    # Relationships to normalized tables
+    baseline_assessment = relationship("BaselineAssessment", back_populates="participant", uselist=False, cascade="all, delete-orphan")
+    scenario_responses = relationship("ScenarioResponse", back_populates="participant", cascade="all, delete-orphan")
+    post_scenario_surveys = relationship("PostScenarioSurvey", back_populates="participant", cascade="all, delete-orphan")
+    pii_disclosures = relationship("PiiDisclosure", back_populates="participant", cascade="all, delete-orphan")
+    sus_responses = relationship("SusResponse", back_populates="participant", uselist=False, cascade="all, delete-orphan")
+    end_of_study_survey = relationship("EndOfStudySurvey", back_populates="participant", uselist=False, cascade="all, delete-orphan")
 
 
-class ConversationSession(Base):
-    """Conversation session model - represents one of the three test conversations."""
-    __tablename__ = "conversation_sessions"
+# =============================================================================
+# TABLE 0: consent_decisions - Consent logging
+# =============================================================================
+class ConsentDecision(Base):
+    """Consent decision log - yes/no with UTC timestamp."""
+    __tablename__ = "consent_decisions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    participant_platform_id = Column(String, nullable=True, index=True)
+    consent = Column(String, nullable=False)  # 'yes' or 'no'
+    timestamp_utc = Column(DateTime(timezone=True), nullable=False)
+
+
+# =============================================================================
+# TABLE 2: baseline_assessment - 4 Likert (1-7) responses
+# =============================================================================
+class BaselineAssessment(Base):
+    """Baseline Self-Assessment - 4 Likert (1-7) responses."""
+    __tablename__ = "baseline_assessment"
     
     id = Column(Integer, primary_key=True, index=True)
-    participant_id = Column(Integer, ForeignKey("participants.id"), nullable=False)
-    prolific_id = Column(String, nullable=True, index=True)  # Store prolific_id for easier querying
-    conversation_id = Column(Integer, nullable=False)  # 1000, 1001, or 1002 from annotated_test.json
-    scenario = Column(String, nullable=False)  # e.g., "Academic Collaboration"
-    current_message_index = Column(Integer, default=0)  # Track progress through conversation
-    completed = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relationships
-    participant = relationship("Participant", back_populates="conversations")
-    user_inputs = relationship("UserInput", back_populates="session", cascade="all, delete-orphan")
-
-
-class UserInput(Base):
-    """User input capture - stores text before Rewrite/Ignore and final submitted text."""
-    __tablename__ = "user_inputs (ignore)"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("conversation_sessions.id"), nullable=False)
-    message_index = Column(Integer, nullable=False)  # Which message in the conversation
-    action_type = Column(String, nullable=False)  # 'rewrite' or 'ignore'
-    
-    # Input capture
-    pre_click_text = Column(Text, nullable=True)  # Text before clicking Rewrite/Ignore
-    final_submitted_text = Column(Text, nullable=True)  # Final text that was submitted
-    
-    # Warning data
-    warning_shown = Column(Boolean, default=False)
-    risk_level = Column(String, nullable=True)  # 'LOW', 'MEDIUM', 'HIGH'
-    warning_explanation = Column(Text, nullable=True)
-    safer_rewrite_offered = Column(Text, nullable=True)
-    
+    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False, unique=True)
+    recognize_sensitive = Column(Integer, nullable=False)  # Likert 1-7
+    avoid_accidental = Column(Integer, nullable=False)  # Likert 1-7
+    familiar_scams = Column(Integer, nullable=False)  # Likert 1-7
+    contextual_judgment = Column(Integer, nullable=False)  # Likert 1-7
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    session = relationship("ConversationSession", back_populates="user_inputs")
+    participant = relationship("Participant", back_populates="baseline_assessment")
 
 
-class SurveyResponse(Base):
-    """Survey response model."""
-    __tablename__ = "survey_responses"
+# =============================================================================
+# TABLE 3: scenario_responses - Per-scenario user input/response data
+# =============================================================================
+class ScenarioResponse(Base):
+    """Scenario responses - stores per-scenario (1-3) user input and system data."""
+    __tablename__ = "scenario_responses"
     __table_args__ = (
-        UniqueConstraint(
-            "participant_id",
-            "survey_type",
-            "question_id",
-            name="uq_survey_response_participant_type_question"
-        ),
+        UniqueConstraint("participant_id", "scenario_number", name="uq_scenario_response_participant_scenario"),
     )
     
     id = Column(Integer, primary_key=True, index=True)
-    participant_id = Column(Integer, ForeignKey("participants.id"), nullable=False)
-    prolific_id = Column(String, nullable=True, index=True)  # Store prolific_id for easier querying
-    question_order = Column(Integer, nullable=True)  # Store question order (1, 2, 3, ...) for sorting
-    survey_type = Column(String, nullable=False)  # 'pre', 'mid', 'post', 'comprehension'
-    question_id = Column(String, nullable=False)
-    question_text = Column(Text, nullable=False)
-    response_text = Column(Text, nullable=True)
-    response_json = Column(JSON, nullable=True)  # For structured responses
+    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
+    scenario_number = Column(Integer, nullable=False)  # 1, 2, or 3
+    original_input = Column(Text, nullable=True)  # Text sent to LLM for assessment
+    masked_text = Column(Text, nullable=True)  # PII-masked version
+    suggested_rewrite = Column(Text, nullable=True)  # Suggested safer rewrite from LLM
+    reasoning = Column("Reasoning", Text, nullable=True)  # Output_2 Reasoning
+    explanation_nist = Column("Explanation_NIST", Text, nullable=True)  # Output_2 Explanation
+    risk_level = Column(String, nullable=True)  # Output_2 Risk_Level
+    primary_risk_factors = Column(Text, nullable=True)  # JSON array from Output_2 Primary_Risk_Factors
+    pii_sensitivity_level = Column(String, nullable=True)
+    pii_sensitivity_explanation = Column(Text, nullable=True)
+    contextual_necessity_level = Column(String, nullable=True)
+    contextual_necessity_explanation = Column(Text, nullable=True)
+    intent_trajectory_level = Column(String, nullable=True)
+    intent_trajectory_explanation = Column(Text, nullable=True)
+    psychological_pressure_level = Column(String, nullable=True)
+    psychological_pressure_explanation = Column(Text, nullable=True)
+    identity_trust_signals_flags = Column(Text, nullable=True)  # JSON array from Output_1 Identity_Trust_Signals Flags
+    identity_trust_signals_explanation = Column(Text, nullable=True)
+    final_message = Column(Text, nullable=True)  # Final message sent by user
+    accepted_rewrite = Column(Boolean, nullable=True)  # Whether user accepted the rewrite
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    participant = relationship("Participant", back_populates="survey_responses")
+    participant = relationship("Participant", back_populates="scenario_responses")
 
 
-class Conversation(Base):
-    """Seed conversation data from annotated_test.json."""
-    __tablename__ = "conversations"
+# =============================================================================
+# TABLE 4: post_scenario_survey - Per-scenario survey responses
+# =============================================================================
+class PostScenarioSurvey(Base):
+    """Post-Scenario Survey - per scenario (1-3)."""
+    __tablename__ = "post_scenario_survey"
+    __table_args__ = (
+        UniqueConstraint("participant_id", "scenario_number", name="uq_post_scenario_participant_scenario"),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
-    conversation_id = Column(Integer, unique=True, nullable=False, index=True)  # 1000, 1001, 1002
-    scenario = Column(String, nullable=False)
-    conversation_data = Column(JSON, nullable=False)  # Full conversation JSON
-    ground_truth = Column(JSON, nullable=False)  # Ground truth data
-    is_malicious = Column(Boolean, nullable=False)
+    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
+    scenario_number = Column(Integer, nullable=False)  # 1, 2, or 3
+    # Common questions (both groups) - Likert 1-7
+    confidence_judgment = Column(Integer, nullable=False)
+    uncertainty_sharing = Column(Integer, nullable=False)
+    perceived_risk = Column(Integer, nullable=False)
+    # Group A only - Likert 1-7 (nullable)
+    warning_clarity = Column(Integer, nullable=True)
+    warning_helpful = Column(Integer, nullable=True)
+    rewrite_quality = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    participant = relationship("Participant", back_populates="post_scenario_surveys")
 
 
-class AuditLog(Base):
-    """Audit log for analytics and tracking."""
-    __tablename__ = "audit_logs"
+# =============================================================================
+# TABLE 5: pii_disclosure - Normalized checkbox responses (one row per selection)
+# =============================================================================
+class PiiDisclosure(Base):
+    """PII Disclosure - normalized table for checkbox responses. Each row = one PII type selected."""
+    __tablename__ = "pii_disclosure"
     
     id = Column(Integer, primary_key=True, index=True)
-    participant_id = Column(Integer, ForeignKey("participants.id"), nullable=True)
-    event_type = Column(String, nullable=False)  # 'conversation_start', 'input_capture', 'survey_response', etc.
-    event_data = Column(JSON, nullable=True)
+    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
+    scenario_number = Column(Integer, nullable=False)  # 1, 2, or 3
+    pii_type = Column(String, nullable=False)  # ENUM values as string for SQLite
+    other_specified = Column(String, nullable=True)  # Text if pii_type is 'other'
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
-class ParticipantRecord(Base):
-    """Flattened participant response record for analysis/export."""
-    __tablename__ = "participant_records"
-
-    prolific_id = Column(String, primary_key=True)
-    variant = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=get_singapore_time)
-    completed_at = Column(DateTime(timezone=True), nullable=True)
-    duration_of_study = Column(Float, nullable=True)
-
-    # Pre-study survey (both variants) - 4 Likert items about confidence and familiarity
-    pre_1 = Column(Text, nullable=True)
-    pre_2 = Column(Text, nullable=True)
-    pre_3 = Column(Text, nullable=True)
-    pre_4 = Column(Text, nullable=True)
-
-    # Conversation data
-    # Map final_raw_* to existing input_* DB columns (no physical rename)
-    final_raw_1 = Column('input_1', Text, nullable=True)
-    msg_1 = Column(Text, nullable=True)
-    final_raw_2 = Column('input_2', Text, nullable=True)
-    msg_2 = Column(Text, nullable=True)
-    final_raw_3 = Column('input_3', Text, nullable=True)
-    msg_3 = Column(Text, nullable=True)
     
-    # New columns for PII analysis (Group A only)
-    final_masked_1 = Column(Text, nullable=True)
-    final_rewrite_1 = Column(Text, nullable=True)
-    final_masked_2 = Column(Text, nullable=True)
-    final_rewrite_2 = Column(Text, nullable=True)
-    final_masked_3 = Column(Text, nullable=True)
-    final_rewrite_3 = Column(Text, nullable=True)
+    # Relationships
+    participant = relationship("Participant", back_populates="pii_disclosures")
 
-    # Variant A mid-survey (3 questions × 3 conversations)
-    # Conversation 1
-    midA_1_q1 = Column(Text, nullable=True)  # "The warning was clear."
-    midA_1_q2 = Column(Text, nullable=True)  # "The warning helped me notice something new."
-    midA_1_q3 = Column(Text, nullable=True)  # "The suggested rewrite preserved what I wanted to say."
-    # Conversation 2
-    midA_2_q1 = Column(Text, nullable=True)
-    midA_2_q2 = Column(Text, nullable=True)
-    midA_2_q3 = Column(Text, nullable=True)
-    # Conversation 3
-    midA_3_q1 = Column(Text, nullable=True)
-    midA_3_q2 = Column(Text, nullable=True)
-    midA_3_q3 = Column(Text, nullable=True)
 
-    # Variant B mid-survey (3 questions × 3 conversations)
-    # Conversation 1
-    midB_1_q1 = Column(Text, nullable=True)  # "Which type of personal information did you end up disclosing?" (multi-choice)
-    midB_1_q2 = Column(Text, nullable=True)  # "How likely is it that the other person was malicious?" (1–5)
-    midB_1_q3 = Column(Text, nullable=True)  # "How important was the personal information?" (1–5)
-    # Conversation 2
-    midB_2_q1 = Column(Text, nullable=True)
-    midB_2_q2 = Column(Text, nullable=True)
-    midB_2_q3 = Column(Text, nullable=True)
-    # Conversation 3
-    midB_3_q1 = Column(Text, nullable=True)
-    midB_3_q2 = Column(Text, nullable=True)
-    midB_3_q3 = Column(Text, nullable=True)
+# =============================================================================
+# TABLE 6: sus_responses - Group A only, 10 SUS items (1-5) + calculated score
+# =============================================================================
+class SusResponse(Base):
+    """SUS Responses - Group A only. 10 SUS items (1-5 scale) plus calculated SUS score."""
+    __tablename__ = "sus_responses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False, unique=True)
+    sus_1 = Column(Integer, nullable=False)  # 1-5
+    sus_2 = Column(Integer, nullable=False)  # 1-5
+    sus_3 = Column(Integer, nullable=False)  # 1-5
+    sus_4 = Column(Integer, nullable=False)  # 1-5
+    sus_5 = Column(Integer, nullable=False)  # 1-5
+    sus_6 = Column(Integer, nullable=False)  # 1-5
+    sus_7 = Column(Integer, nullable=False)  # 1-5
+    sus_8 = Column(Integer, nullable=False)  # 1-5
+    sus_9 = Column(Integer, nullable=False)  # 1-5
+    sus_10 = Column(Integer, nullable=False)  # 1-5
+    sus_score = Column(Numeric(5, 2), nullable=True)  # Calculated SUS score (0-100)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    participant = relationship("Participant", back_populates="sus_responses")
 
-    # Post-survey: SUS questions (Variant A only)
-    sus_1 = Column(Text, nullable=True)
-    sus_2 = Column(Text, nullable=True)
-    sus_3 = Column(Text, nullable=True)
-    sus_4 = Column(Text, nullable=True)
-    sus_5 = Column(Text, nullable=True)
-    sus_6 = Column(Text, nullable=True)
-    sus_7 = Column(Text, nullable=True)
-    sus_8 = Column(Text, nullable=True)
-    sus_9 = Column(Text, nullable=True)
-    sus_10 = Column(Text, nullable=True)
 
-    # Post-survey: Extra questions (Variant A only)
-    post_trust = Column(Text, nullable=True)  # "Overall, I trusted the information presented by the system/interface." (1–5 Likert scale)
-    post_realism = Column(Text, nullable=True)  # "Overall, the study tasks felt realistic." (1–5 Likert scale)
+# =============================================================================
+# TABLE 7: end_of_study_survey - Both groups with Group A specific fields
+# =============================================================================
+class EndOfStudySurvey(Base):
+    """End-of-Study Survey - both groups with Group A specific fields."""
+    __tablename__ = "end_of_study_survey"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False, unique=True)
+    # Common questions (both groups)
+    tasks_realistic = Column(Integer, nullable=False)  # Likert 1-7
+    realism_explanation = Column(Text, nullable=True)  # Free text
+    overall_confidence = Column(Integer, nullable=False)  # Likert 1-7
+    sharing_rationale = Column(Text, nullable=True)  # Free text
+    # Group A only (nullable)
+    trust_system = Column(Integer, nullable=True)  # Likert 1-7
+    trust_explanation = Column(Text, nullable=True)  # Free text
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    participant = relationship("Participant", back_populates="end_of_study_survey")

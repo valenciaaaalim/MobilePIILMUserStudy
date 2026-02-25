@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name and birth year are sensitive identity markers."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background checks usually occur after formal interviews and job offers."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Recruiter is quickly pushing for personal details through informal chat."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Professional opportunity and legal requirements are used to influence behavior."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Solicitor",
+        "Informal Channel"
+      ],
+      "Explanation": "Requesting sensitive data via chat instead of a secure portal."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, ",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature disclosure of identity markers",
+      "Suspected recruitment phishing attempt",
+      "Insecure data transmission channel"
+    ],
+    "Explanation_NIST": "The draft contains Direct Identifiers (Full Name) and a Quasi-identifier (Year of Birth) as categorized in NIST SP 800-122. Providing these together via an unencrypted, informal channel increases the risk of 'Linkability,' where an attacker can combine these data points to uniquely identify the individual or facilitate identity theft. The context (msg-4) uses 'Regulatory Compliance' as a social-engineering trigger to lower the user's guard. Legitimate background checks require a System of Records (SOR) and a formal consent process, typically handled via a secure, dedicated HR portal rather than a chat interface.",
+    "Reasoning": "Sharing your full name and birth details in a chat is dangerous. Legitimate employers use secure websites for background checks, not text messages. You should ask for an official link instead.",
+    "Rewrite": "I\u2019m definitely interested in the role! For security, could you send me a link to your official company portal or application system where I can safely provide my background information?"
+  }
+}

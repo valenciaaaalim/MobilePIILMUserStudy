@@ -1,45 +1,30 @@
 import React from 'react';
 import './WarningModal.css';
 
-function WarningModal({ warningState, onAcceptRewrite, onContinueAnyway }) {
-  const getRiskLevelColor = (level) => {
-    switch (level) {
-      case 'HIGH':
-        return '#d32f2f';
-      case 'MEDIUM':
-        return '#ed6c02';
-      case 'LOW':
-        return '#0288d1';
-      default:
-        return '#666';
-    }
-  };
-
+function WarningModal({ warningState, riskPending, onAcceptRewrite, onContinueAnyway }) {
+  const rewriteText = warningState?.saferRewrite || '';
+  const reasoning = warningState?.reasoning || '';
+  const riskLevel = warningState?.riskLevel || 'UNKNOWN';
+  const disableAccept = riskPending || !rewriteText.trim();
   return (
     <div className="warning-modal-overlay">
       <div className="warning-modal">
-        <div className="warning-header">
-          <div 
-            className="risk-level-badge"
-            style={{ backgroundColor: getRiskLevelColor(warningState.riskLevel) }}
-          >
-            {warningState.riskLevel} RISK
-          </div>
-        </div>
-        
         <div className="warning-content">
-          <h3>Privacy Warning</h3>
-          <p className="warning-explanation">{warningState.explanation}</p>
-          
-          {warningState.primaryRiskFactors && warningState.primaryRiskFactors.length > 0 && (
-            <div className="risk-factors">
-              <strong>Primary concerns:</strong>
-              <ul>
-                {warningState.primaryRiskFactors.map((factor, idx) => (
-                  <li key={idx}>{factor}</li>
-                ))}
-              </ul>
-            </div>
+          {riskPending ? (
+            <div className="warning-explanation">Loading analysis...</div>
+          ) : (
+            <>
+              <h3>Risk Level</h3>
+              <p className={`risk-level risk-level-${riskLevel.toLowerCase()}`}>{riskLevel}</p>
+              <div className="rewrite-block">
+                <h3>Suggested Rewrite</h3>
+                <div className="rewrite-text">{rewriteText || 'No rewrite available.'}</div>
+              </div>
+              <div className="reasoning-block">
+                <h3>Reasoning</h3>
+                <p className="warning-explanation">{reasoning || 'This rewrite reduces sensitive detail exposure.'}</p>
+              </div>
+            </>
           )}
         </div>
         
@@ -53,6 +38,7 @@ function WarningModal({ warningState, onAcceptRewrite, onContinueAnyway }) {
           <button 
             className="accept-button"
             onClick={onAcceptRewrite}
+            disabled={disableAccept}
           >
             Accept safer rewrite
           </button>
@@ -63,4 +49,3 @@ function WarningModal({ warningState, onAcceptRewrite, onContinueAnyway }) {
 }
 
 export default WarningModal;
-

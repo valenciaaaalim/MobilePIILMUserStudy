@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name and birth date are highly sensitive and enable identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Initial chats do not require specific personal details for eligibility checks."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The conversation is leading toward providing credentials to an unverified party."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Framing the request as regulatory compliance creates a false sense of obligation."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Sender",
+        "Premature Request",
+        "Authority Framing"
+      ],
+      "Explanation": "Sender requests high-risk data before a formal interview or secure portal."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 1986,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Recruitment Scam Indicator",
+      "Unsecured Channel"
+    ],
+    "Explanation_NIST": "The user is disclosing direct identifiers (Full Name) and quasi-identifiers (Date of Birth) as defined by NIST SP 800-122. The combination of these data points significantly increases the 'linkability' of the user's identity. The context is a textbook social-engineering tactic where a 'Regulatory Compliance' trigger is used to lower the user's defenses. Sharing these details over an unencrypted or unverified chat platform violates best practices for PII protection.",
+    "Reasoning": "Sharing your full name and exact birthday in a chat is very risky. This person could use that information to steal your identity. It is safer to ask for a link to an official company website instead.",
+    "Rewrite": "I am interested in the role. Please provide a link to your official company careers portal where I can safely submit my information."
+  }
+}

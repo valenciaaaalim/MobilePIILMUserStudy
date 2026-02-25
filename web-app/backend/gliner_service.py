@@ -5,7 +5,7 @@ Based on the gliner_chunking.ipynb notebook logic.
 
 import logging
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 from dataclasses import dataclass
 from gliner import GLiNER
 from transformers import AutoTokenizer
@@ -154,59 +154,78 @@ class GliNERService:
         if not self.is_loaded():
             self.initialize()
         logger.info("GLiNER masking start (len=%s)", len(text))
-        
-        # Step 1: Detect PII entities
-        entities = self.model.predict_entities(text, self.labels)
-        
-        # Step 2: Mask PII entities (replace from end to start to preserve positions)
-        masked_text = text
-        pii_spans = []
-        
-        for ent in sorted(entities, key=lambda x: x['start'], reverse=True):
-            label = ent['label'].upper().replace(" ", "_")
-            tag = f"[{label}]"
-            
-            # Store PII span info
-            pii_spans.append(PiiSpan(
-                start=ent['start'],
-                end=ent['end'],
-                label=ent['label'],
-                text=text[ent['start']:ent['end']]
-            ))
-            
-            # Replace entity with tag
-            masked_text = masked_text[:ent['start']] + tag + masked_text[ent['end']:]
-        
-        # Step 3: Chunk the masked text
-        chunks = self._chunk_sentences(masked_text, max_tokens)
-        
-        # Sort PII spans by start position for return
+
+        token_count = len(self.tokenizer.encode(text, add_special_tokens=False))
+        pii_spans: List[PiiSpan] = []
+
+        # Mirror notebook behavior: no chunking when input is within limit.
+        if token_count <= max_tokens:
+            masked_text, entities = self._redact_with_gliner(text)
+            for ent in entities:
+                pii_spans.append(
+                    PiiSpan(
+                        start=ent["start"],
+                        end=ent["end"],
+                        label=ent["label"],
+                        text=text[ent["start"]:ent["end"]],
+                    )
+                )
+            pii_spans.sort(key=lambda x: x.start)
+            return MaskingResult(
+                masked_text=masked_text,
+                chunks=[masked_text] if masked_text else [],
+                pii_spans=pii_spans,
+            )
+
+        # Mirror notebook behavior for long input:
+        # sentence chunking (no overlap) -> per-chunk GLiNER redaction -> join.
+        chunk_infos = self._chunk_sentences_with_metadata(text, max_tokens)
+        redacted_chunks: List[str] = []
+        for chunk_info in chunk_infos:
+            redacted_chunk, entities = self._redact_with_gliner(chunk_info["text"])
+            redacted_chunks.append(redacted_chunk)
+
+            for ent in entities:
+                global_span = self._map_chunk_entity_to_original(ent, chunk_info["segments"])
+                if global_span is None:
+                    continue
+                start, end = global_span
+                pii_spans.append(
+                    PiiSpan(
+                        start=start,
+                        end=end,
+                        label=ent["label"],
+                        text=text[start:end],
+                    )
+                )
+
         pii_spans.sort(key=lambda x: x.start)
-        
         return MaskingResult(
-            masked_text=masked_text,
-            chunks=chunks,
-            pii_spans=pii_spans
+            masked_text=" ".join(redacted_chunks),
+            chunks=redacted_chunks,
+            pii_spans=pii_spans,
         )
-    
+
+    def _redact_with_gliner(self, text_chunk: str) -> Tuple[str, List[Dict[str, Any]]]:
+        """Notebook-equivalent GLiNER redaction for a text chunk."""
+        entities = self.model.predict_entities(text_chunk, self.labels)
+        redacted = text_chunk
+        for ent in sorted(entities, key=lambda x: x["start"], reverse=True):
+            tag = f"[{ent['label'].upper().replace(' ', '_')}]"
+            redacted = redacted[:ent["start"]] + tag + redacted[ent["end"]:]
+        return redacted, entities
+
     def _chunk_sentences(self, text: str, max_tokens: int) -> List[str]:
-        """
-        Chunk text by sentences respecting token limit.
-        Based on the notebook's chunk_sentences function.
-        """
+        """Notebook-equivalent sentence chunking: no overlaps and no repetition."""
         sentences = sent_tokenize(text)
         chunks = []
         current_chunk = []
         current_tokens = 0
-        
+
         for sentence in sentences:
-            # Encode sentence to get token count
-            sentence_tokens = self.tokenizer.encode(
-                sentence,
-                add_special_tokens=False
-            )
+            sentence_tokens = self.tokenizer.encode(sentence, add_special_tokens=False)
             sentence_token_len = len(sentence_tokens)
-            
+
             if current_tokens + sentence_token_len <= max_tokens:
                 current_chunk.append(sentence)
                 current_tokens += sentence_token_len
@@ -215,12 +234,93 @@ class GliNERService:
                     chunks.append(" ".join(current_chunk))
                 current_chunk = [sentence]
                 current_tokens = sentence_token_len
-        
+
         if current_chunk:
             chunks.append(" ".join(current_chunk))
-        
-        # If no chunks created (empty text), return empty list
-        return chunks if chunks else [text] if text else []
+
+        return chunks
+
+    def _chunk_sentences_with_metadata(self, text: str, max_tokens: int) -> List[Dict[str, Any]]:
+        """
+        Build sentence chunks with metadata to map chunk-local offsets back
+        to original text offsets.
+        """
+        sentences = sent_tokenize(text)
+        if not sentences:
+            return []
+
+        # Align each NLTK sentence with original-text offsets.
+        aligned: List[Dict[str, Any]] = []
+        cursor = 0
+        for sentence in sentences:
+            start = text.find(sentence, cursor)
+            if start == -1:
+                start = text.find(sentence)
+            if start == -1:
+                # Fallback keeps chunking stable even if alignment is imperfect.
+                start = cursor
+                end = min(len(text), start + len(sentence))
+            else:
+                end = start + len(sentence)
+            cursor = end
+            aligned.append({"text": sentence, "start": start, "end": end})
+
+        chunks: List[Dict[str, Any]] = []
+        current_sentences: List[Dict[str, Any]] = []
+        current_tokens = 0
+
+        for sentence_info in aligned:
+            sentence_tokens = self.tokenizer.encode(
+                sentence_info["text"],
+                add_special_tokens=False,
+            )
+            sentence_token_len = len(sentence_tokens)
+
+            if current_tokens + sentence_token_len <= max_tokens:
+                current_sentences.append(sentence_info)
+                current_tokens += sentence_token_len
+            else:
+                if current_sentences:
+                    chunks.append(self._build_chunk_info(current_sentences))
+                current_sentences = [sentence_info]
+                current_tokens = sentence_token_len
+
+        if current_sentences:
+            chunks.append(self._build_chunk_info(current_sentences))
+
+        return chunks
+
+    def _build_chunk_info(self, sentences: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Compose notebook-style chunk text and local-to-global span mapping."""
+        chunk_text = " ".join(sentence["text"] for sentence in sentences)
+        segments: List[Dict[str, int]] = []
+        local_cursor = 0
+        for index, sentence in enumerate(sentences):
+            local_start = local_cursor
+            local_end = local_start + len(sentence["text"])
+            segments.append(
+                {
+                    "local_start": local_start,
+                    "local_end": local_end,
+                    "global_start": sentence["start"],
+                    "global_end": sentence["end"],
+                }
+            )
+            local_cursor = local_end + (1 if index < len(sentences) - 1 else 0)
+        return {"text": chunk_text, "segments": segments}
+
+    def _map_chunk_entity_to_original(
+        self, entity: Dict[str, Any], segments: List[Dict[str, int]]
+    ) -> Optional[Tuple[int, int]]:
+        """Map an entity detected in a chunk back to original text offsets."""
+        ent_start = int(entity["start"])
+        ent_end = int(entity["end"])
+        for segment in segments:
+            if ent_start >= segment["local_start"] and ent_end <= segment["local_end"]:
+                rel_start = ent_start - segment["local_start"]
+                rel_end = ent_end - segment["local_start"]
+                return segment["global_start"] + rel_start, segment["global_start"] + rel_end
+        return None
     
     def cleanup(self):
         """Cleanup resources."""

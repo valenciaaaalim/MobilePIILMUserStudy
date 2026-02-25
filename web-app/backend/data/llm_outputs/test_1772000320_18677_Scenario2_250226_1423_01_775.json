@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, contact info, and specific professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Information is requested for funding, but source legitimacy is unverified."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Movement toward formalizing contact outside the current secure platform."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'success' and 'funding' as lures to encourage rapid disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external entity",
+        "Solicitation of PII"
+      ],
+      "Explanation": "Interaction initiated by a third party promising financial rewards."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with Springfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS] and my phone number is [PHONE_NUMBER]. Is there anything else?",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of multiple PII data points",
+      "Potential Phishing/Financial baiting",
+      "Out-of-band communication request"
+    ],
+    "Explanation_NIST": "The message contains 'Direct Identifiers' (Full Name) and 'Linkable Information' (University Affiliation, Research Area) as defined in NIST SP 800-122. The combination of these with contact information (Email, Phone) significantly increases the risk of identity theft or targeted social engineering. The 'Gerald' persona uses a 'Reward' trigger (research funding) to bypass the user's skepticism, a classic social engineering tactic. Providing all these details at once to an unverified source allows for a complete profile to be built on the user.",
+    "Reasoning": "Sharing your full name, phone, and email all at once is risky when talking to someone you don't know. This person might be using the promise of money to get your private details.",
+    "Rewrite": "I'm interested in discussing this further. Could you please share a formal website or an official InnovateTech Ventures document about this funding program? I'd prefer to review those details before I share my full personal contact information."
+  }
+}

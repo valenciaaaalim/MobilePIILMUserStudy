@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Includes full name and specific date of birth for identity verification."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Standard recruitment processes use secure portals for sensitive background check data."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Escalates quickly from casual conversation to collecting high-value personal identity data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses the incentive of a job opportunity to encourage fast disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Channel",
+        "Authority Trigger",
+        "Data Harvesting"
+      ],
+      "Explanation": "The sender uses a corporate persona to request data via chat."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, 4",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "High Likelihood of Identity Theft",
+      "Social Engineering (Reciprocity/Authority)",
+      "Insecure Data Transmission"
+    ],
+    "Explanation_NIST": "The user is disclosing Direct Identifiers (Full Name) and Quasi-identifiers (Date of Birth and partial Address) as categorized in NIST SP 800-122. The combination of these data points significantly increases the 'Linkability' risk, allowing an attacker to potentially access financial or medical records. The context demonstrates a social engineering 'Authority' trigger where the sender leverages a fake recruitment scenario to bypass normal security protocols. Requesting such data in a standard chat interface rather than an encrypted HRIS portal is a major red flag for phishing.",
+    "Reasoning": "Sharing your full name and birth date in a chat message is dangerous and could lead to someone stealing your identity. Legitimate employers will send you a link to a secure website instead of asking for this in a chat.",
+    "Rewrite": "I am interested in moving forward. Could you please send me a link to your company's secure HR portal to provide my background information?"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Agreement to share name, email, phone, and professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Funding offers usually require formal portals rather than direct chat disclosure."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Message signals immediate compliance with a large-scale data harvesting request."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses flattery and financial incentives to encourage rapid information sharing."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Outreach",
+        "Financial Incentive",
+        "Data Harvesting"
+      ],
+      "Explanation": "Sender identity is unconfirmed and uses a generic corporate name."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Certainly [NAME]!",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Unverified sender identity",
+      "Potential for identity theft via data harvesting",
+      "Social engineering through financial bait"
+    ],
+    "Explanation_NIST": "The user is responding to a request for multiple PII categories defined in NIST SP 800-122, including Direct Identifiers (Full Name, Email, Phone Number) and Quasi-identifiers (University Affiliation, Research Area). While the message text itself is short, it constitutes a 'pre-commitment' to disclose a high-density PII profile to an unverified external party. The context (InnovateTech Ventures) follows common social-engineering patterns where financial opportunity and flattery are used to minimize the user's perceived risk of data disclosure.",
+    "Reasoning": "You are agreeing to send a large amount of your private information to someone you do not know. This person might be pretending to offer money just to get your contact details. It is safer to check if their company is real before saying yes.",
+    "Rewrite": "I'm interested in learning more. Could you please send me a link to your official company website or a formal application portal first?"
+  }
+}

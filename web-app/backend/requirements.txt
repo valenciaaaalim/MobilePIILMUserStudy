@@ -14,12 +14,10 @@ transformers==4.51.0
 nltk==3.8.1
 transformers>=4.38.2
 
-# Gemini API
-google-generativeai==0.3.2
-
 # Utilities
 python-dotenv==1.0.0
 python-json-logger==2.0.7
+google-genai>=1.0.0
 
 # Security
 itsdangerous==2.1.2

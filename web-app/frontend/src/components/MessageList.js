@@ -3,16 +3,36 @@ import MessageBubble from './MessageBubble';
 import DateSeparator from './DateSeparator';
 import './MessageList.css';
 
-function MessageList({ messages }) {
-  const messagesEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+function MessageList({ messages, conversationKey }) {
+  const listRef = useRef(null);
+  const wasNearBottomRef = useRef(true);
+  const skipAutoScrollRef = useRef(true);
 
   useEffect(() => {
-    scrollToBottom();
+    if (listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+    skipAutoScrollRef.current = true;
+    wasNearBottomRef.current = false;
+  }, [conversationKey]);
+
+  useEffect(() => {
+    if (skipAutoScrollRef.current && listRef.current) {
+      listRef.current.scrollTop = 0;
+      skipAutoScrollRef.current = false;
+      return;
+    }
+    if (listRef.current && wasNearBottomRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
   }, [messages]);
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    wasNearBottomRef.current = distanceFromBottom < 60;
+  };
 
   const formatDate = (date) => {
     const today = new Date();
@@ -37,7 +57,7 @@ function MessageList({ messages }) {
   };
 
   return (
-    <div className="message-list">
+    <div className="message-list" ref={listRef} onScroll={handleScroll}>
       {messages.map((message, index) => {
         const prevMessage = index > 0 ? messages[index - 1] : null;
         const showSeparator = needsDateSeparator(
@@ -54,10 +74,8 @@ function MessageList({ messages }) {
           </React.Fragment>
         );
       })}
-      <div ref={messagesEndRef} />
     </div>
   );
 }
 
 export default MessageList;
-

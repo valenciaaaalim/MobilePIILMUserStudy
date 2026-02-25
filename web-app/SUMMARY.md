@@ -35,7 +35,7 @@ This document summarizes the conversion of the native Android app to a web appli
 - HTTPS-only cookies support (configurable)
 
 ✅ **Database Seeding**
-- Script to load conversations from `annotated_test.json`
+- Script/runtime loader for conversations from `backend/app/assets/annotated_test.json`
 - Handles all three conversation scenarios (1000, 1001, 1002)
 
 ### Frontend (React)
@@ -95,7 +95,7 @@ This document summarizes the conversion of the native Android app to a web appli
 
 ## Key Features Implemented
 
-- ✅ Three conversation scenarios from annotated_test.json
+- ✅ Three conversation scenarios from `backend/app/assets/annotated_test.json`
 - ✅ A/B testing with balanced assignment
 - ✅ User input capture (pre-click and final text)
 - ✅ Risk assessment with Gemini API
@@ -159,4 +159,3 @@ This document summarizes the conversion of the native Android app to a web appli
 - Conversation direction logic determines SENT vs RECEIVED based on which participant name appears first
 - Risk assessment currently uses unmasked text (GLiNER integration pending)
 - Frontend is designed to run separately from backend (different ports, CORS enabled)
-

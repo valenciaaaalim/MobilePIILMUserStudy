@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name and birth year are significant identifiers for identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background data should be submitted through official, secure company portals only."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The request for personal data via chat mimics common recruitment scams."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The sender uses professional authority and 'regulatory compliance' to prompt compliance."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified platform",
+        "Out-of-band data request",
+        "Social engineering hook"
+      ],
+      "Explanation": "Providing sensitive info in a chat bypasses standard secure corporate practices."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Recruitment Scam Indicator",
+      "Insecure Data Transmission"
+    ],
+    "Explanation_NIST": "The user is disclosing a Full Name (Direct Identifier) and Birth Year (Quasi-identifier) as defined by NIST SP 800-122. In the context of the conversation history, the counterparty 'Una' is using social engineering tactics\u2014specifically 'Authority' (referencing regulatory compliance) and 'Liking' (complimenting the profile)\u2014to bypass standard security protocols. Requesting PII within a chat interface rather than a secure HR management system is a high-risk indicator of a phishing or recruitment scam intended to harvest data for identity exploitation.",
+    "Reasoning": "Sharing your full name and birth year in a chat is very risky and can lead to identity theft. You should ask the sender for a secure link or an official company website to provide this sensitive information safely.",
+    "Rewrite": "I am interested in the position, but I prefer to provide my personal information through a secure company portal or an official application link. Could you please share the link to your secure system?"
+  }
+}

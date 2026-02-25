@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name, birth date, and address enable high-impact identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background checks should use secure portals, not informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Requesting sensitive personal data early is a common phishing tactic."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Mentions of compliance and opportunity create professional pressure to comply."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified recruiter",
+        "Insecure channel",
+        "Premature PII request"
+      ],
+      "Explanation": "The sender's identity and company legitimacy have not been verified."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 42 Maple Street, [LOCATION_CITY]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Potential",
+      "Unsecured Data Transmission",
+      "Social Engineering (Recruitment Scam)"
+    ],
+    "Explanation_NIST": "The message contains a combination of Direct Identifiers (Full Name) and Quasi-identifiers (Date of Birth, Physical Address) as defined in NIST SP 800-122. This combination creates high 'Linkability,' allowing an actor to uniquely identify and impersonate the individual. The context follows a known social-engineering pattern: using a professional 'hook' (job opportunity) and 'Authority' (regulatory compliance) to solicit high-value PII through an informal, insecure communication channel.",
+    "Reasoning": "You are sharing very sensitive details like your birth date and home address in a chat. It is safer to ask for a secure website or official form before giving out this information.",
+    "Rewrite": "I'm happy to move forward. Could you please send me a link to your secure company portal or an official application form to provide these details?"
+  }
+}

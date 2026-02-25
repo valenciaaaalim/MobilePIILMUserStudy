@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Email and birth details are sensitive identifiers used for account recovery."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Professional interviews rarely require specific birth dates or personal contact info."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The requester is systematically moving from professional to highly personal data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses flattery and professional process requirements to compel the user."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Authority",
+        "Flattery",
+        "Data Harvesting"
+      ],
+      "Explanation": "Requester uses a journalistic pretext to solicit sensitive personal information."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "[EMAIL_ADDRESS] birthday is [AGE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of sensitive identifiers (Email + Birthdate)",
+      "Social engineering via flattery and professional pretext",
+      "Lack of verified identity for the information requester"
+    ],
+    "Explanation_NIST": "The message contains a direct identifier (Email Address) and a quasi-identifier (Age/Birthdate) as defined by NIST SP 800-122. When combined with previously shared data (City, Employer, University), the risk of 'Individual Participation' and 'Purpose Specification' violations is high. The requester exhibits social engineering tactics including flattery ('tech guru') and pretexting (falsified 'editorial process') to justify the collection of sensitive PII, which could facilitate identity theft or account takeover.",
+    "Reasoning": "Sharing your personal contact details and birth info with an unverified person is dangerous. They may be trying to gather enough information to break into your accounts. It is safer to keep your private details hidden.",
+    "Rewrite": "I prefer to keep my personal contact info and birth details private. Can we continue our discussion here?"
+  }
+}

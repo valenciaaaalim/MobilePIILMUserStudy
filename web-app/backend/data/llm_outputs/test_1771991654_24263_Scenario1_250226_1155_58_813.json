@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Includes full name, exact date of birth, and home address."
+    },
+    "Contextual_Necessity": {
+      "Level": "HIGH",
+      "Explanation": "Sensitive data requested via chat instead of a secure portal."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Rapid progression from initial contact to requesting highly sensitive PII."
+    },
+    "Psychological_Pressure": {
+      "Level": "HIGH",
+      "Explanation": "Uses a 'job opportunity' and 'compliance' to create artificial urgency."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified_Channel",
+        "Premature_Data_Request",
+        "Generic_Employer"
+      ],
+      "Explanation": "Requests sensitive data without providing official company verification or links."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 1986, 42 Maple Field, Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Potential",
+      "Social Engineering (Recruitment Scam)",
+      "Insecure Communication Channel"
+    ],
+    "Explanation_NIST": "The message contains Direct Identifiers (Full Name, Street Address) and Quasi-identifiers (Date of Birth) as defined by NIST SP 800-122. The combination of these specific fields allows for easy identity masking and fraud. The context shows a 'Recruitment Scam' pattern where an attacker uses the promise of a job to extract high-value PII. Professional background checks are governed by strict confidentiality and should never be conducted via informal chat messages without a secure, encrypted platform.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat is very risky. Real companies use secure websites for background checks rather than asking for details in a message. You should ask for an official link instead.",
+    "Rewrite": "I am interested in the opportunity. Please provide a link to your company's secure application portal so I can safely submit my information for the background check."
+  }
+}

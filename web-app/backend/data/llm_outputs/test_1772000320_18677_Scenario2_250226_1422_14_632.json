@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Full name is a direct identifier often used for identity harvesting."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Specific personal details are premature before verifying the sender's credentials."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Sender is steering the conversation toward collecting a PII dossier."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Flattery and promises of funding create a strong incentive to comply."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external entity",
+        "Solicitation of PII"
+      ],
+      "Explanation": "Sender claims authority but uses typical social engineering grooming tactics."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME].",
+    "Risk_Level": "MEDIUM",
+    "Primary_Risk_Factors": [
+      "Direct Identifier Disclosure",
+      "Potential Phishing/Grooming",
+      "Lack of Out-of-Band Verification"
+    ],
+    "Explanation_NIST": "The message contains a Direct Identifier (Full Name) as defined by NIST SP 800-122. While a name alone is often public, providing it in response to an unsolicited offer of 'funding' increases risk. The sender (Gerald) is employing 'Liking' and 'Authority' social engineering triggers. When combined with the requested email and phone number in the history, this creates a high-risk linkable data set. The intent trajectory suggests a potential harvesting operation targeting academic professionals.",
+    "Reasoning": "Sharing your full name with a stranger offering money is risky. They might be trying to collect your personal details for a scam.",
+    "Rewrite": "I'd like to learn more about InnovateTech Ventures first. Do you have an official website or a LinkedIn profile I can review?"
+  }
+}

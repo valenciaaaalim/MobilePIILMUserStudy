@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Includes full birth date, email address, and sensitive financial account numbers."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Bank details are never required for journalist identity verification or interviews."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Requester is systematically escalating from general chat to harvesting financial data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses flattery and professional 'editorial requirements' to coerce data disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Pretexting",
+        "Information Harvesting",
+        "Financial Solicitation"
+      ],
+      "Explanation": "Stranger's request for financial info under a professional guise is suspicious."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "matthew1985@gmail.com birthday is 11 May 1978 and my bank account is [BANK_ACCOUNT]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Financial Data Disclosure",
+      "Social Engineering Pretext",
+      "Identity Theft Vulnerability"
+    ],
+    "Explanation_NIST": "The draft contains a direct identifier (email) and quasi-identifiers (full date of birth) categorized under NIST SP 800-122. Crucially, it includes a financial record identifier (bank account). The conversation history reveals a classic 'pretexting' social engineering attack. The sender uses 'Liking' (flattery) and 'Authority' (journalist persona) to build rapport before moving to 'Information Harvesting.' Disclosing a bank account for identity verification is a high-risk anomaly not justified by the professional context, posing an immediate threat of financial fraud.",
+    "Reasoning": "You are sharing very private details like your bank information and birthday. The person asking might not be a real journalist. Giving this information away could let someone steal your money or your identity.",
+    "Rewrite": "I'm not comfortable sharing my bank details or personal contact info. Let's keep our communication to this platform for now."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name combined with requested date of birth and address is high-impact."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Providing sensitive data via chat before a formal interview is unnecessary."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Sender is steering the conversation toward harvesting sensitive personal identity data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'regulatory compliance' and 'official application' to create professional urgency."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Premature Data Request"
+      ],
+      "Explanation": "Requesting sensitive background check info via informal chat is a red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME],",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Social Engineering (Pretexting)",
+      "Potential Identity Theft",
+      "Information Over-sharing"
+    ],
+    "Explanation_NIST": "The message contains Direct Identifiers (Full Name) as defined in NIST SP 800-122. When combined with the requested Quasi-identifiers (DOB, Location) in the conversation history, the risk of 'Linkability' increases significantly. The sender is using a 'Recruitment Pretext' to bypass standard secure HR portals, creating a high risk of unauthorized PII disclosure in an unencrypted chat medium.",
+    "Reasoning": "Sharing your full name and other personal details in a chat can be risky, especially when a stranger asks for them. It is safer to ask for an official website or a secure portal to handle your sensitive information.",
+    "Rewrite": "I'd prefer to provide my personal details through your company's official careers portal or a secure application link. Could you please send that over?"
+  }
+}

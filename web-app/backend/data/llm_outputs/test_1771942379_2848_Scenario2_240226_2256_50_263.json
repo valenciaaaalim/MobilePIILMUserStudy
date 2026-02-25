@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Email addresses are direct identifiers that facilitate unauthorized contact or phishing."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Professional funding requests typically occur through official institutional portals, not chat."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The requester is systematically collecting data to build a target profile."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses flattery and the promise of financial reward to encourage oversharing."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Affiliation",
+        "Financial Incentive Lure",
+        "Cold Outreach"
+      ],
+      "Explanation": "The sender uses a common social engineering pretext involving 'potential funding'."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Certainly [FIRST_NAME]! my email is [EMAIL_ADDRESS]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Social Engineering (Flattery/Reward)",
+      "Phishing Pretext",
+      "Data Harvesting"
+    ],
+    "Explanation_NIST": "The draft message discloses an email address, which NIST SP 800-122 classifies as a direct identifier. In the context of the conversation history, this information is being linked to the user's name, university affiliation, and specific research areas. The 'InnovateTech Ventures' outreach exhibits classic pretexting characteristics\u2014offering a significant benefit (funding) to bypass the user's natural caution. Providing direct contact info outside of a secure, verified institutional channel increases the risk of spear-phishing and identity theft.",
+    "Reasoning": "A stranger is offering you money to get your personal contact details. This is a common trick used to gain your trust and steal information. You should verify who they are before giving them a way to reach you.",
+    "Rewrite": "Could you please provide a link to your organization's official website or the formal application portal for this funding?"
+  }
+}

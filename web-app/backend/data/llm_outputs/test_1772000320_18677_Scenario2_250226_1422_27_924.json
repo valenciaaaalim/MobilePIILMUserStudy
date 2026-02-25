@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Combines full name with specific professional and institutional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Information is requested for funding, but source legitimacy remains unverified."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "The conversation is moving toward a full personal profile disclosure."
+    },
+    "Psychological_Pressure": {
+      "Level": "LOW",
+      "Explanation": "No immediate deadline, but uses flattery and 'success' as incentives."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external entity",
+        "Solicitation of PII"
+      ],
+      "Explanation": "Sender uses general praise to solicit specific personal and professional data."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'.",
+    "Risk_Level": "MEDIUM",
+    "Primary_Risk_Factors": [
+      "Aggregation of identifying information",
+      "Potential phishing/social engineering bait",
+      "Unverified third-party outreach"
+    ],
+    "Explanation_NIST": "The message contains PII categorized under NIST SP 800-122 as Direct Identifiers (Full Name) and Quasi-identifiers (University Affiliation, Research Area). While individual elements are often public, their aggregation in response to an unsolicited outreach increases the risk of targeted social engineering. The 'Received' messages exhibit 'Pretexting' and 'Liking' triggers by offering financial support and flattery to lower the user's guard before requesting contact details.",
+    "Reasoning": "Sharing your full name and workplace with an unverified contact can be risky. This person is using praise and offers of money to get your personal details. It is safer to confirm their identity through official channels first.",
+    "Rewrite": "I'm interested in discussing this further. Could you please provide an official website or a formal funding application link where I can learn more about InnovateTech Ventures?"
+  }
+}

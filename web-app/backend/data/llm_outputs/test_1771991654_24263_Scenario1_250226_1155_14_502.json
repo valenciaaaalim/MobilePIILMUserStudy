@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Contains full name and full date of birth."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Sensitive data is rarely required this early via unencrypted chat."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Sender is quickly escalating to collect identity-theft level data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses compliance and career opportunity to justify the data request."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unsolicited Outreach",
+        "Authority Claim",
+        "Direct PII Request"
+      ],
+      "Explanation": "Sender's identity and company legitimacy have not been verified."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Social Engineering (Authority)",
+      "Phishing"
+    ],
+    "Explanation_NIST": "The draft contains a Name (Direct Identifier) and a full Date of Birth (Quasi-identifier) as categorized in NIST SP 800-122. The combination of these fields allows for high-confidence re-identification and potential account takeover. The context shows a social engineering 'hook' using a professional opportunity to lower the user's guard. The request for PII within a messaging app before any formal interview or secure portal access is a major red flag for fraudulent activity.",
+    "Reasoning": "Sharing your full name and exact birthday in a chat is very risky. Real employers will usually ask you to enter this info into a secure website rather than a text message. It is safer to ask for a link to their official job portal first.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to provide my personal details through a secure company portal or official application link. Could you provide that?"
+  }
+}

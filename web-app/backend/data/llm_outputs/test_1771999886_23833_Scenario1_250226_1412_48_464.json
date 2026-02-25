@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name, birthdate, and home address combined enable identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background checks should occur through secure, official corporate HR portals."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Classic social engineering pattern: building trust then requesting sensitive data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses an 'exciting opportunity' and 'compliance' to justify the request."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified recruiter",
+        "Informal channel usage",
+        "Direct PII solicitation"
+      ],
+      "Explanation": "Requesting high-risk data over chat is a major security red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 42 Maple Street, Springfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Insecure channel for sensitive data",
+      "High probability of phishing/recruitment scam",
+      "Disclosure of identity-theft-critical data points"
+    ],
+    "Explanation_NIST": "The message contains a combination of direct identifiers (Full Name, Physical Address) and quasi-identifiers (Date of Birth) as categorized in NIST SP 800-122. This specific combination significantly increases the risk of linkability, allowing an adversary to uniquely identify and impersonate the user. The recruitment context matches known social engineering patterns where professional trust is exploited to bypass standard security protocols. NIST guidelines emphasize that such data should never be transmitted over unencrypted or unverified messaging platforms.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat is very risky. Legitimate companies use secure websites for checks, not text messages. It is safer to ask for an official link.",
+    "Rewrite": "I\u2019d prefer to provide this information through a secure, official application portal for privacy reasons. Could you send me the link?"
+  }
+}

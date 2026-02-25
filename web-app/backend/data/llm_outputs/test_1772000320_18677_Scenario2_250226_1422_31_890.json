@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, email, and specific professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Initial contact rarely requires full PII before verifying the sender."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Information gathering by third party under the guise of funding."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses flattery and 'success' promises to elicit private data."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external entity",
+        "Solicitation of PII"
+      ],
+      "Explanation": "Sender is an unverified external source requesting multiple identifiers."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of multiple PII elements",
+      "Potential Phishing/Social Engineering",
+      "Targeted professional solicitation"
+    ],
+    "Explanation_NIST": "The message contains 'Direct Identifiers' (Full Name) and 'Quasi-identifiers' (University Affiliation, Research Area) as defined in NIST SP 800-122. The combination of these data points increases the risk of 'Linkability,' where a malicious actor could uniquely identify the user or conduct targeted social engineering. The external sender (Gerald) uses a 'Liking' and 'Reciprocity' social engineering trigger (offering funding) to lower the user's guard, leading to a high risk of data oversharing in an unverified channel.",
+    "Reasoning": "Sharing your full name, workplace, and contact details with an unverified person is risky. They may be using flattery about your work to get your private information.",
+    "Rewrite": "I'm interested in learning more about InnovateTech Ventures. Could you please share an official website or a formal proposal first? I'd prefer to review your organization's details before I share my full contact information."
+  }
+}

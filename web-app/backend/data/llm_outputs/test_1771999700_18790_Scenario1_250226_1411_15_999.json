@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Includes full name, exact birth date, and residential street address."
+    },
+    "Contextual_Necessity": {
+      "Level": "HIGH_RISK",
+      "Explanation": "Background check data should use secure portals, not direct chat."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH_RISK",
+      "Explanation": "Sender rapidly escalated from introduction to requesting highly sensitive details."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'regulatory compliance' and 'exciting opportunity' to justify the request."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified_Channel",
+        "Pretexting_Attempt"
+      ],
+      "Explanation": "Recruiter's identity is unverified; requesting sensitive data over chat is suspicious."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 42 Maple Street, Sprinfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Vulnerability",
+      "Social Engineering (Pretexting)",
+      "Insecure Data Transfer"
+    ],
+    "Explanation_NIST": "The message contains PII as defined by NIST SP 800-122, including Direct Identifiers (Full Name) and sensitive Quasi-identifiers (Date of Birth, Home Address). In the context of a recruitment conversation, this specific combination of data points is frequently sought by malicious actors for identity theft. The 'Contextual Cue' here is the request for background check data over an insecure, informal chat channel before any formal interview or offer, which is a significant red flag for social engineering.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat is risky. It is safer to ask for an official company website or a secure link to provide this sensitive information. This protects you from people who might be pretending to be recruiters to get your personal details.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my personal details like my address and date of birth over chat. Could you provide a link to a secure company portal where I can submit my application and background check information?"
+  }
+}

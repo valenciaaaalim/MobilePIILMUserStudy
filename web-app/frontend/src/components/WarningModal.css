@@ -63,6 +63,56 @@
   line-height: 1.5;
 }
 
+.rewrite-block {
+  margin-top: 8px;
+  margin-bottom: 28px;
+}
+
+.reasoning-block {
+  margin-top: 0;
+}
+
+.risk-level {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.risk-level-low {
+  color: #2e7d32;
+}
+
+.risk-level-medium {
+  color: #ef6c00;
+}
+
+.risk-level-high {
+  color: #c62828;
+}
+
+.rewrite-section {
+  margin: 0 0 16px 0;
+  padding: 12px;
+  background-color: #f7f7f7;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+}
+
+.rewrite-section strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.rewrite-text {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 18px;
+  color: #111;
+}
+
 .risk-factors {
   margin-top: 16px;
   padding: 12px;
@@ -124,3 +174,8 @@
   background-color: #20BA5A;
 }
 
+.continue-button:disabled,
+.accept-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

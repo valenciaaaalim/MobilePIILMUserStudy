@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name, birth date, and home address enable identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Legitimate employers use secure portals, not chat, for background checks."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Soliciting full identity details early is a common phishing tactic."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses professional opportunity and compliance requirements to gain trust."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Generic company name",
+        "Pre-interview data request",
+        "Unverified contact"
+      ],
+      "Explanation": "Requesting sensitive data before a formal interview is highly suspicious."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 42 Maple Street, Sprinfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Phishing Indicators",
+      "Unsecured Data Channel"
+    ],
+    "Explanation_NIST": "The draft message contains a high concentration of PII as defined by NIST SP 800-122, including direct identifiers (Full Name) and quasi-identifiers (Date of Birth and Physical Address). The combination of these fields poses a significant risk to the user's privacy and could facilitate financial fraud or identity cloning. From a social-engineering perspective, the requester uses a 'Professional Opportunity' lure and 'Authority/Compliance' triggers to bypass the user's natural caution. In a professional workflow, background checks are performed via specialized, encrypted third-party services after a formal offer or interview, making this request in a chat window a high-probability social-engineering attack.",
+    "Reasoning": "Sharing your full name, birth date, and home address in a chat is very risky. Real employers use secure websites for background checks, not text messages. This person might be trying to steal your identity.",
+    "Rewrite": "I'm interested in the role! Could you send me a link to your company\u2019s secure careers portal or the official application system where I can safely provide my background information?"
+  }
+}

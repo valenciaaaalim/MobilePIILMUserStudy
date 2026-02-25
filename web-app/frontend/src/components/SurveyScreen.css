@@ -51,6 +51,12 @@
   margin-bottom: 30px;
 }
 
+.question-error {
+  margin-bottom: 6px;
+  color: #b00020;
+  font-size: 12px;
+}
+
 .question-label {
   display: block;
   margin-bottom: 12px;
@@ -59,30 +65,76 @@
   font-size: 16px;
 }
 
-.rating-options {
+.rating-scale {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
 }
 
-.rating-option {
-  padding: 10px 16px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  background: white;
+.rating-track {
+  position: relative;
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.rating-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background-color: #c9c9c9;
+  transform: translateY(-50%);
+}
+
+.rating-marker {
+  position: relative;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
+  padding: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
 }
 
-.rating-option:hover {
+.rating-marker:focus-visible {
+  outline: 2px solid #25D366;
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+.marker-dot {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #c9c9c9;
+  border-radius: 50%;
+  background-color: white;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.rating-marker:hover .marker-dot {
   border-color: #25D366;
 }
 
-.rating-option.selected {
+.rating-marker.selected .marker-dot {
   background-color: #25D366;
-  color: white;
   border-color: #25D366;
+}
+
+.rating-labels {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.rating-label {
+  min-height: 14px;
 }
 
 .multiple-choice-options {
@@ -132,3 +184,12 @@
   cursor: not-allowed;
 }
 
+.submit-error {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: #fff1f1;
+  color: #b00020;
+  border: 1px solid #f5c2c7;
+  font-size: 14px;
+}

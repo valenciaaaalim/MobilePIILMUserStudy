@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Email addresses are direct identifiers frequently targeted in phishing and spam."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "While necessary for contact, the sender's identity remains unverified and suspicious."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Cold outreach requesting a cluster of identifiers suggests potential data harvesting."
+    },
+    "Psychological_Pressure": {
+      "Level": "HIGH",
+      "Explanation": "Financial incentives and flattery are used to bypass the user's skepticism."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Financial Bait",
+        "Unverified Entity",
+        "Cold Outreach"
+      ],
+      "Explanation": "The sender's affiliation with 'InnovateTech Ventures' has not been independently validated."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Certainly [FIRST_NAME]! my email is [EMAIL_ADDRESS]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Unverified Third-Party Outreach",
+      "Direct Identifier Disclosure",
+      "Financial Incentive Social Engineering"
+    ],
+    "Explanation_NIST": "The message contains a direct identifier (Email Address) as defined in NIST SP 800-122. In this context, the PII is being provided to an unverified external party ('Gerald') who initiated contact via cold outreach. The conversation history shows a pattern of social engineering: the sender uses flattery regarding the user's 'pioneering work' and the promise of financial reward ('funding') to induce the user to provide a bundle of PII (Name, Email, Phone, Affiliation). This combination of data significantly increases the risk of identity theft, targeted spear-phishing, and further social engineering attacks. Without out-of-band verification of the sender's identity, disclosing PII poses a high risk.",
+    "Reasoning": "You are giving your contact details to someone you just met online. This person is offering you money, which is a common trick used to get private information. It is better to verify who they are before sharing anything.",
+    "Rewrite": "I'm interested in discussing this further. Could you please send more information about your organization or a link to the funding program first?"
+  }
+}

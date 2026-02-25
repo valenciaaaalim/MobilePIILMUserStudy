@@ -1,0 +1,33 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "MEDIUM",
+      "Explanation": "Estimated fallback because risk model output was unavailable."
+    },
+    "Contextual_Necessity": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate context due temporary model unavailability."
+    },
+    "Intent_Trajectory": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate intent due temporary model unavailability."
+    },
+    "Psychological_Pressure": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate pressure due temporary model unavailability."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [],
+      "Explanation": "Trust-signal analysis unavailable in fallback mode."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: Kimberly Miller, June 15, 1986, 42 Maple street, Springfield, IL",
+    "Risk_Level": "MEDIUM",
+    "Primary_Risk_Factors": [],
+    "Explanation_NIST": "Error during assessment: HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Read timed out. (read timeout=30)",
+    "Reasoning": "Sensitive details were detected, so this rewrite keeps your intent while sharing less.",
+    "Rewrite": "I\u2019m not comfortable sharing my exact location right now."
+  },
+  "error": "HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Read timed out. (read timeout=30)"
+}

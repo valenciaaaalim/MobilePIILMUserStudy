@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, contact info, and specific professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Initial contact typically doesn't require immediate disclosure of all contact details."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Sender is gathering a profile of identifiers under a financial pretext."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'foot-in-the-door' technique with the promise of easy research funding."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external solicitor",
+        "Data harvesting request"
+      ],
+      "Explanation": "Requestor asks for multiple direct identifiers very early in the interaction."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS] and my phone number is [PHONE_NUMBER]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Aggregation of multiple direct identifiers (NIST SP 800-122)",
+      "Potential solicitation fraud or phishing",
+      "Unnecessary disclosure of private contact details"
+    ],
+    "Explanation_NIST": "The message contains several 'Direct Identifiers' as defined by NIST SP 800-122, including Full Name, Email Address, and Phone Number. When linked with 'Quasi-identifiers' like University Affiliation and Research Area, the risk of successful identity masquerading or targeted social engineering increases significantly. The sender ('Gerald') is using an 'Authority/Liking' trigger by offering funding to elicit a high-volume data disclosure in only the second turn of the conversation, which is a classic indicator of a harvesting attempt.",
+    "Reasoning": "Sharing your full name, phone number, and email all at once is risky with someone you just met online. They might be trying to collect your personal details by promising you money for your work.",
+    "Rewrite": "I'm a researcher at Springfield University focusing on Neural Networks and Cognitive Computing. I'd be happy to learn more about your funding process; please let me know if there is an official website or portal where I can review the program details first."
+  }
+}

@@ -6,13 +6,37 @@ import ConversationScreen from './components/ConversationScreen';
 import SurveyScreen from './components/SurveyScreen';
 import CompletionScreen from './components/CompletionScreen';
 import AlreadyCompletedScreen from './components/AlreadyCompletedScreen';
+import AdminParticipantView from './components/AdminParticipantView';
 import './App.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const PROLIFIC_STORAGE_KEY = 'whatsapp_prolific_id';
 
+// Hardcoded conversation data (from annotated_test.json)
+// This will be loaded from the backend in production
+const SEED_CONVERSATIONS = [
+  {
+    conversation_id: 1000,
+    scenario: "Academic Collaboration",
+    conversation: [],
+    ground_truth: {}
+  },
+  {
+    conversation_id: 1001,
+    scenario: "Professional Networking",
+    conversation: [],
+    ground_truth: {}
+  },
+  {
+    conversation_id: 1002,
+    scenario: "Job Recruitment",
+    conversation: [],
+    ground_truth: {}
+  }
+];
+
 // Component to handle conversation route with index parameter
-function ConversationRoute({ conversations, sessionIds, participantId, prolificId, variant, onComplete }) {
+function ConversationRoute({ conversations, participantId, prolificId, variant, onComplete }) {
   const { index } = useParams();
   const conversationIndex = parseInt(index || '0', 10);
   
@@ -27,7 +51,7 @@ function ConversationRoute({ conversations, sessionIds, participantId, prolificI
   return (
     <ConversationScreen
       conversation={conversations[conversationIndex]}
-      sessionId={sessionIds[conversationIndex]}
+      sessionId={conversationIndex + 1}  // Simple session ID based on index
       participantId={participantId}
       participantProlificId={prolificId}
       variant={variant}
@@ -38,6 +62,7 @@ function ConversationRoute({ conversations, sessionIds, participantId, prolificI
 }
 
 function App() {
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
   const [participantId, setParticipantId] = useState(null);
   const [variant, setVariant] = useState(null);
   const [participantStatus, setParticipantStatus] = useState('new');
@@ -45,44 +70,71 @@ function App() {
   const [prolificId, setProlificId] = useState('');
   const [currentConversationIndex, setCurrentConversationIndex] = useState(0);
   const [conversations, setConversations] = useState([]);
-  const [sessionIds, setSessionIds] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isAdminRoute);
   const [initialized, setInitialized] = useState(false);
   const [piiReady, setPiiReady] = useState(true);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      setLoading(false);
+      return;
+    }
     // Initialize participant only once
     if (!initialized) {
       initializeParticipant();
       loadConversations();
       setInitialized(true);
     }
-  }, [initialized]);
+  }, [initialized, isAdminRoute]);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      return undefined;
+    }
     if (variant === 'A') {
       checkPiiStatus();
       const interval = setInterval(checkPiiStatus, 3000);
       return () => clearInterval(interval);
     }
-  }, [variant]);
+    return undefined;
+  }, [variant, isAdminRoute]);
 
   const generateLocalProlificId = () => {
     const randomPart = Math.random().toString(36).slice(2, 8);
     return `local_${Date.now()}_${randomPart}`;
   };
 
+  const shouldTagVariantInPid = (pid) => /^(local|test)_/i.test(pid || '');
+
+  const normalizeProlificId = (pid) => {
+    const cleaned = (pid || '').trim();
+    if (!cleaned) return '';
+    if (!shouldTagVariantInPid(cleaned)) return cleaned;
+    return cleaned.replace(/_([AB])$/i, '');
+  };
+
+  const withVariantSuffix = (pid, assignedVariant) => {
+    const base = normalizeProlificId(pid);
+    if (!base || !assignedVariant) return base;
+    return `${base}_${assignedVariant}`;
+  };
+
   const resolveProlificId = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlProlificId = urlParams.get('PROLIFIC_PID');
     if (urlProlificId) {
-      localStorage.setItem(PROLIFIC_STORAGE_KEY, urlProlificId);
-      return urlProlificId;
+      const canonicalId = normalizeProlificId(urlProlificId);
+      localStorage.setItem(PROLIFIC_STORAGE_KEY, canonicalId);
+      return canonicalId;
     }
 
     const storedId = localStorage.getItem(PROLIFIC_STORAGE_KEY);
     if (storedId) {
-      return storedId;
+      const canonicalId = normalizeProlificId(storedId);
+      if (canonicalId !== storedId) {
+        localStorage.setItem(PROLIFIC_STORAGE_KEY, canonicalId);
+      }
+      return canonicalId;
     }
 
     const generatedId = generateLocalProlificId();
@@ -104,6 +156,17 @@ function App() {
       setParticipantStatus(response.data.status || 'new');
       setCompletionUrl(response.data.completion_url || '');
       setProlificId(prolificId);
+
+      if (shouldTagVariantInPid(prolificId) && response.data.variant) {
+        const taggedPid = withVariantSuffix(prolificId, response.data.variant);
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.get('PROLIFIC_PID') !== taggedPid) {
+          currentUrl.searchParams.set('PROLIFIC_PID', taggedPid);
+          const nextSearch = currentUrl.searchParams.toString();
+          const nextUrl = `${currentUrl.pathname}${nextSearch ? `?${nextSearch}` : ''}${currentUrl.hash || ''}`;
+          window.history.replaceState({}, '', nextUrl);
+        }
+      }
     } catch (error) {
       console.error('Error initializing participant:', error);
     } finally {
@@ -113,10 +176,13 @@ function App() {
 
   const loadConversations = async () => {
     try {
+      // Try to load from backend first
       const response = await axios.get(`${API_BASE_URL}/api/conversations/seed`);
       setConversations(response.data);
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      console.warn('Could not load conversations from backend, using seed data');
+      // Fall back to seed data (in a real app, this would come from the backend)
+      setConversations(SEED_CONVERSATIONS);
     }
   };
 
@@ -134,33 +200,24 @@ function App() {
     }
   };
 
-  // Create sessions when participantId and conversations are available
-  useEffect(() => {
-    const createSessions = async () => {
-      if (participantId && conversations.length > 0 && sessionIds.length === 0) {
-        try {
-          const sessions = await Promise.all(
-            conversations.map(conv => 
-              axios.post(
-                `${API_BASE_URL}/api/conversations/sessions/${participantId}/${conv.conversation_id}`
-              )
-            )
-          );
-          setSessionIds(sessions.map(s => s.data.id));
-        } catch (error) {
-          console.error('Error creating sessions:', error);
-        }
-      }
-    };
-    createSessions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [participantId, conversations.length]);
-
   const handleConversationComplete = () => {
     if (currentConversationIndex < conversations.length - 1) {
       setCurrentConversationIndex(currentConversationIndex + 1);
     }
   };
+
+  if (isAdminRoute) {
+    return (
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/admin" element={<AdminParticipantView />} />
+            <Route path="/admin/*" element={<AdminParticipantView />} />
+          </Routes>
+        </div>
+      </Router>
+    );
+  }
 
   if (loading) {
     return <div className="loading">Loading...</div>;
@@ -196,7 +253,6 @@ function App() {
             element={
               <ConversationRoute
                 conversations={conversations}
-                sessionIds={sessionIds}
                 participantId={participantId}
                 prolificId={prolificId}
                 variant={variant}

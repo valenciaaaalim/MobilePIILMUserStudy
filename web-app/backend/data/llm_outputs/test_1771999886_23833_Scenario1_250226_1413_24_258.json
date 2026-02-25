@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name, birthdate, and physical address are high-value target data."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background check data is rarely requested via informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Rapid progression to sensitive data requests suggests a recruitment scam."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'regulatory compliance' to justify the urgent request for data."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified_Identity",
+        "Authority_Claim",
+        "Reward_Incentive"
+      ],
+      "Explanation": "Claims company affiliation without verification while promising a job opportunity."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 42 Maple Street, Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Recruitment Fraud Indicators",
+      "Insecure Data Transfer"
+    ],
+    "Explanation_NIST": "The message contains multiple NIST SP 800-122 PII categories: Full Name (Direct Identifier), Date of Birth (Quasi-identifier), and Physical Address (Direct Identifier). The combination of these fields enables high linkability, posing a significant risk of identity theft. Contextually, the request from 'Una' fits the pattern of social engineering (recruitment phishing), where the attacker uses 'Psychological Pressure' (compliance requirements) to bypass the user's natural caution. Providing this data over an unencrypted chat channel is not a standard professional practice for background checks.",
+    "Reasoning": "Sharing your full birthday and home address in a chat is dangerous. Real companies use secure websites for background checks, not text messages.",
+    "Rewrite": "I'm interested in the role, but I'm uncomfortable sharing my full birthdate and address over chat. Could you send me a link to your company\u2019s secure portal or a formal application form?"
+  }
+}

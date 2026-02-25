@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name with specific university and professional research data."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Funding discussions require identity, but full PII is premature for intro."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Sender is steering user toward disclosing a complete identity profile."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'success' and 'funding' as lures to encourage rapid disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external source",
+        "Data harvesting pattern"
+      ],
+      "Explanation": "External entity asking for extensive PII before established formal contact."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Targeted PII collection",
+      "Social engineering via financial incentive",
+      "Potential identity impersonation"
+    ],
+    "Explanation_NIST": "The message contains Direct Identifiers (Full Name) and Quasi-identifiers (University Affiliation, Research Area) as defined in NIST SP 800-122. When linked, these create a unique identity profile. The context shows a 'Reciprocity' and 'Liking' social engineering trigger where the sender (Gerald) offers a benefit (funding) to lower the user's guard. The trajectory suggests an attempt to gather a full dossier (Name, Email, Phone, Affiliation) which exceeds the necessity of an initial inquiry and poses a high risk of identity theft or spear-phishing.",
+    "Reasoning": "Sharing your full name and workplace with an unverified person involves high risk. They might be using the promise of money to collect your personal details. It is safer to keep things general until you can confirm who they are.",
+    "Rewrite": "I'm interested in learning more about InnovateTech Ventures. Could you share an official website or a formal proposal first? I'd prefer to discuss my specific research and university details once we've established a formal connection."
+  }
+}

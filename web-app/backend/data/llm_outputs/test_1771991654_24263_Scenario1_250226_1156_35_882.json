@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name, birth date, and address enable significant identity theft risk."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Sensitive personal data is rarely required during the initial chat phase."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Request escalates rapidly from initial contact to highly sensitive data collection."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses professional authority and regulatory compliance to compel immediate data disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified channel",
+        "Generic entity",
+        "Insecure data request"
+      ],
+      "Explanation": "Recruiter identity is unverified and uses an insecure communication medium."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986, June 15, 1986, 42 Maple Field, Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Social Engineering",
+      "Insecure Data Transfer"
+    ],
+    "Explanation_NIST": "The user is providing several NIST SP 800-122 categories: Full Name (Direct Identifier), Date of Birth (Quasi-identifier), and Physical Address (Direct Identifier). The linkability of these specific elements facilitates identity theft. From a social engineering perspective, the 'Recruiter' is using the 'Authority' and 'Liking' triggers (praising the profile) to bypass the user's natural caution. Requesting a background check through a chat interface rather than a secure HR portal is a significant indicator of a fraudulent data harvesting attempt.",
+    "Reasoning": "Sharing your full name, birthday, and home address over a chat message is very dangerous. Someone could use this information to pretend to be you. It is much safer to ask for a secure, official website to submit these details.",
+    "Rewrite": "I am interested in learning more. Could you please provide a link to your company's secure career portal or an official application system where I can safely submit my information for a background check?"
+  }
+}

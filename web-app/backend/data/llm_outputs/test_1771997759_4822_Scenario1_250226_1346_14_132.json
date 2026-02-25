@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name and birth year are foundational data for identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background checks should use secure portals, not informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Requesting sensitive data early suggests a potential recruitment-themed phishing scam."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses authority and regulatory compliance to compel immediate data disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Sender",
+        "Generic Company Name",
+        "Insecure Data Request"
+      ],
+      "Explanation": "Asking for personal details in a chat is a major red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Vulnerability",
+      "Social Engineering (Recruitment Scam)",
+      "Unsecured Communication Channel"
+    ],
+    "Explanation_NIST": "The draft message contains a Full Name (Direct Identifier) and Birth Year (Quasi-identifier) per NIST SP 800-122. In the context of a recruitment conversation, providing these via an unencrypted chat channel significantly increases the risk of PII 'linking' and identity exploitation. The sender's request for a 'preliminary' check before an interview is a classic social-engineering tactic used to bypass standard security protocols and harvest personal data.",
+    "Reasoning": "Sharing your full name and birth year in a chat is dangerous. Real companies use secure websites for background checks, not text messages.",
+    "Rewrite": "I'm interested in the role, but I only provide my personal details through a secure company portal once we have had an initial interview."
+  }
+}

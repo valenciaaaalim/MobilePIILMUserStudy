@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name and birth year are sensitive identifiers for identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Sharing sensitive personal details via chat is unnecessary for initial screening."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The conversation is trending toward a classic recruitment scam or data-harvesting."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The promise of an exciting job opportunity creates pressure to comply."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Premature Data Request",
+        "Off-Platform Background Check"
+      ],
+      "Explanation": "A stranger is requesting private data before establishing formal professional trust."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Vulnerability",
+      "Social Engineering (Recruitment Scam)",
+      "Unsecured Data Disclosure"
+    ],
+    "Explanation_NIST": "The user's message contains PII (Full Name) and a quasi-identifier (Birth Year) as categorized in NIST SP 800-122. In this context, providing these details to an unverified third party (Una) via a chat interface poses a high risk of identity theft. The requester is using 'regulatory compliance' and 'sensitive financial data' as a pretext (social engineering) to bypass the user's natural privacy barriers. This combination of PII and social triggers indicates a high-risk data disclosure scenario.",
+    "Reasoning": "Sharing your full name and birth year with a stranger online is very risky. This person could use these personal details to try and take over your accounts or steal your identity. It is better to wait until you can use a secure, official website to provide this information.",
+    "Rewrite": "I\u2019m interested in the role, but I don\u2019t feel comfortable sharing my personal details over chat. Could you send me a link to your company\u2019s secure career portal or application form instead?"
+  }
+}

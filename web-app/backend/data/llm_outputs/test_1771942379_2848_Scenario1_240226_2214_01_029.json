@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name combined with date of birth enables identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background check data is rarely required during initial chat phases."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Conversation moved rapidly from greeting to requesting sensitive personal identifiers."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Mentions of regulatory compliance and sensitive data create false authority."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Premature PII Request",
+        "Social Engineering"
+      ],
+      "Explanation": "The sender requests sensitive info without providing formal documentation or portals."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Potential",
+      "Recruitment Scam Indicators",
+      "Insecure Data Transfer"
+    ],
+    "Explanation_NIST": "The user is disclosing a Name (Direct Identifier) and a full Date of Birth (Quasi-identifier) as categorized under NIST SP 800-122. The combination of these fields significantly increases the 'linkability' of the data, which could be used to distinguish or trace an individual's identity across other databases. The context mimics a 'Pretexting' social engineering attack where a false sense of trust is established via a professional opportunity to bypass the user's natural caution regarding privacy.",
+    "Reasoning": "Providing your full name and exact birth date over a chat message is very dangerous. This information could allow someone to impersonate you or access your private accounts. Legitimate employers will usually ask for this through a secure, official website later in the hiring process.",
+    "Rewrite": "I'm interested in the role, but I would prefer to provide my personal details through a secure application portal or after we have a formal interview."
+  }
+}

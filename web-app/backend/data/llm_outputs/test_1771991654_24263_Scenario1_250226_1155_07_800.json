@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name and birth year are significant personal identifiers."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Background checks should occur through secure portals, not via chat."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Requesting sensitive data early suggests potential identity harvesting or fraud."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Use of compliance and job opportunities creates pressure to comply."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified sender",
+        "Unofficial channel",
+        "Premature data request"
+      ],
+      "Explanation": "Sender identity and corporate affiliation are not verified in chat."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 1986,",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Oversharing sensitive identifiers",
+      "Potential identity theft",
+      "Unverified recruitment process"
+    ],
+    "Explanation_NIST": "The user message includes a Name (Direct Identifier) and birth year (Quasi-identifier). Per NIST SP 800-122, combining these increases the risk of 'linkability,' allowing an attacker to uniquely identify the individual or conduct identity theft. The conversation shows hallmarks of social engineering (pretexting), where the 'recruiter' uses the authority of 'regulatory compliance' to bypass standard security behaviors. Requesting sensitive data like full name, date of birth, and address through an unencrypted, unverified chat interface before a formal interview is a high-risk indicator of a phishing or data-harvesting operation.",
+    "Reasoning": "Sharing your full name and birth year in a chat is risky. Real companies usually ask for this information through secure websites, not in a simple message. It is safer to ask for a formal way to submit your details.",
+    "Rewrite": "I'm interested, but I'd prefer to provide those details through a secure company portal or official application link for security. Could you send me that?"
+  }
+}

@@ -5,6 +5,28 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
+
+def _clean_env(value: Optional[str]) -> Optional[str]:
+    """Normalize env strings and strip accidental wrapping quotes."""
+    if value is None:
+        return None
+    normalized = value.strip()
+    if len(normalized) >= 2:
+        if (normalized[0] == '"' and normalized[-1] == '"') or (
+            normalized[0] == "'" and normalized[-1] == "'"
+        ):
+            normalized = normalized[1:-1].strip()
+    return normalized
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    """Parse env bool flags."""
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 class Settings:
     """Application settings."""
     
@@ -27,9 +49,17 @@ class Settings:
     )
     
     # Gemini API
-    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
-    GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
+    # Per Google docs, GOOGLE_API_KEY is a supported standard env var.
+    # If both are set, prefer GOOGLE_API_KEY.
+    GOOGLE_API_KEY: Optional[str] = _clean_env(os.getenv("GOOGLE_API_KEY"))
+    GEMINI_API_KEY: Optional[str] = _clean_env(os.getenv("GEMINI_API_KEY"))
+    GEMINI_MODEL_NAME: str = (
+        _clean_env(os.getenv("GEMINI_MODEL_NAME"))
+        or "gemini-3-flash-preview"
+    )
     GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "30"))
+    GEMINI_THINKING_LEVEL: str = (_clean_env(os.getenv("GEMINI_THINKING_LEVEL")) or "low").lower()
+    GEMINI_INCLUDE_THOUGHTS: bool = _env_bool("GEMINI_INCLUDE_THOUGHTS", True)
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me-in-production")

@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, email, and specific professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Data is requested for funding, but source is unverified."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "Information gathering could lead to identity theft or spear-phishing."
+    },
+    "Psychological_Pressure": {
+      "Level": "LOW",
+      "Explanation": "Tone is encouraging but uses 'success' to entice data sharing."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified external solicitor",
+        "Vague 'InnovateTech' branding"
+      ],
+      "Explanation": "Sender uses high-reward promises to bypass standard verification."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with sprinfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS]",
+    "Risk_Level": "MEDIUM",
+    "Primary_Risk_Factors": [
+      "Aggregation of identifying information",
+      "Potential phishing target for academic credentials",
+      "Unverified third-party request"
+    ],
+    "Explanation_NIST": "The message contains PII falling under NIST SP 800-122 categories: Direct Identifiers (Full Name) and Quasi-identifiers (University Affiliation). The combination of name, workplace, and email increases the risk of 'linkability.' In the context of the conversation, the sender 'Gerald' uses a social engineering tactic (Reciprocity/Liking) by offering funding to solicit this data. While the data itself is often public, providing it all at once to an unverified contact facilitates targeted social engineering.",
+    "Reasoning": "Sharing your full name, workplace, and contact details with someone you just met online is risky. They might be using the promise of funding to trick you into giving away personal information.",
+    "Rewrite": "I'm interested in learning more about InnovateTech Ventures. Could you please share a formal website or a LinkedIn profile? I'd prefer to review your organization's details before providing my full contact information."
+  }
+}

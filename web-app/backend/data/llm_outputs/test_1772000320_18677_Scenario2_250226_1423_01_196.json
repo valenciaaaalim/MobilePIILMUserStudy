@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, contact info, and specific professional affiliation."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Initial contact usually requires less data before verifying funding legitimacy."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Move toward providing deep personal data to an unverified external party."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'success' and 'funding' as lures to encourage rapid disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified_External_Solicitation",
+        "Data_Harvesting_Pattern"
+      ],
+      "Explanation": "Sender uses generic praise and requests specific personal data immediately."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "My full name is [FIRST_NAME] [LAST_NAME]. I'm affiliated with Springfield University, and my research area is 'Neural Networks and Cognitive Computing'. My email is [EMAIL_ADDRESS] and my phone number is [PHONE_NUMBER]. Is there anything else?",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Oversharing of contact details",
+      "Potential phishing/social engineering",
+      "Verification of sender identity missing"
+    ],
+    "Explanation_NIST": "The user is disclosing several NIST SP 800-122 categories: Direct Identifiers (Full Name), Linkable Quasi-identifiers (University Affiliation, Research Area), and Contact Information (Email, Phone). In the context of a cold outreach from 'InnovateTech Ventures', this creates a high risk of identity harvesting or spear-phishing. The sender uses positive reinforcement ('thrilled', 'success') to lower the user's guard. Providing this bundle of data allows an attacker to build a comprehensive profile or compromise the user's professional accounts.",
+    "Reasoning": "You are sharing a lot of private contact details with someone you just met online. They may be using the promise of money to get your personal information. It is safer to check if their company is real before sending these details.",
+    "Rewrite": "I'm interested in discussing this further. My research focus is on Neural Networks and Cognitive Computing at Springfield University. To keep things professional, could you send me an official proposal or a link to your company's funding portal first?"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Contains full name, exact date of birth, and complete physical address."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Formal background checks should use secure portals, not unencrypted chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Requester is specifically pivoting to collect identity-verifying data via social engineering."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses the appeal of a job opportunity and regulatory compliance requirements."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Channel",
+        "Direct PII Request",
+        "Recruitment Pretext"
+      ],
+      "Explanation": "Sharing sensitive data with an unverified contact via chat is unsafe."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity theft risk",
+      "Informal data disclosure",
+      "Recruitment scam indicator"
+    ],
+    "Explanation_NIST": "The user is disclosing multiple NIST SP 800-122 PII categories: Full Name (Direct Identifier), Date of Birth (Quasi-identifier), and Physical Address (Quasi-identifier). The synthesis of these elements creates a high risk of identity theft. The social-engineering context involves 'Pretexting,' where the attacker poses as a recruiter to solicit sensitive data. In professional environments, background checks are conducted through secure HRIS or dedicated third-party platforms with encryption, not through a multi-turn chat interface.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat message is very dangerous. Real companies use secure websites for background checks rather than informal conversations. This person may be trying to steal your identity.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my personal details here. Could you send me a link to your secure company portal?"
+  }
+}
