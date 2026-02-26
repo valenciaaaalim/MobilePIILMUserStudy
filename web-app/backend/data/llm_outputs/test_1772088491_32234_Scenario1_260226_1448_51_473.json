@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Full name combined with date of birth and address enables identity theft."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birth dates and addresses are frequently used as security verification answers."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are normal for jobs but rare during first contact."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Chat platforms lack the security protocols required for handling sensitive background data."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "Uses the excitement of a new job to rush data sharing."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME],",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature request for sensitive PII",
+      "Lack of secure data transmission channel",
+      "High identity theft risk"
+    ],
+    "Reasoning": "Contextual Advice: While the sender claims this is for a job, asking for a full name, birth date, and home address via a chat message before any formal interview or contract is a major red flag. This combination of data is highly sensitive and often used for identity fraud. Legitimate companies use secure, encrypted portals for background checks, not casual messaging. You should verify the sender's identity through official channels before providing any specific personal details.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my full name, date of birth, and address over chat. Do you have a secure company portal where I can submit this information?"
+  }
+}

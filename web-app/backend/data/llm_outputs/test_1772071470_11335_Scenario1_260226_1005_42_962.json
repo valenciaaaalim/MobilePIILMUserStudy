@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Includes full name, specific birth date, and a complete residential address."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Standard background checks use secure portals, not informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Direct request for sensitive data suggests a phishing or harvesting attempt."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The sender uses professional 'compliance' language to force immediate disclosure."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Insecure Data Request"
+      ],
+      "Explanation": "Requesting private details via chat is a significant social engineering red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Vulnerability",
+      "Social Engineering",
+      "Insecure Communication Channel"
+    ],
+    "Explanation_NIST": "The draft message contains multiple NIST SP 800-122 identifiers: Full Name (Direct Identifier), Date of Birth (Quasi-identifier), and Physical Address (Direct Identifier). When aggregated, these data points provide a high degree of linkability, making the user highly vulnerable to identity theft. The conversation history shows a classic social engineering pattern: establishing a professional persona (XYZ Corp) and then using 'regulatory compliance' as a pretext to bypass standard secure procedures and obtain PII through an unencrypted chat medium.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat is very risky. Real companies use secure websites for these checks rather than asking for private details in a message. This person might be trying to steal your identity.",
+    "Rewrite": "I am interested in the role. Could you please send me a link to your company's secure portal or a formal background check form to provide my details safely?"
+  }
+}

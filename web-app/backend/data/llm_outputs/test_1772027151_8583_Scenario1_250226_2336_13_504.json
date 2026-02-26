@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, specific date of birth, and complete physical address."
+    },
+    "Contextual_Necessity": {
+      "Level": "MEDIUM",
+      "Explanation": "Standard for background checks but premature for an initial unverified chat."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "External party is steering user toward disclosing high-value identity theft data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses 'compliance' and 'opportunity' to create urgency and professional obligation."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Solicitor",
+        "Out-of-Band Data Request"
+      ],
+      "Explanation": "Requesting sensitive data via chat rather than a secure portal."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, 42 Maple Street, Springfields, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Full Identity Disclosure",
+      "Potential Recruitment Scam",
+      "Insecure Data Transmission"
+    ],
+    "Explanation_NIST": "The message contains 'Direct Identifiers' (Full Name) and 'Quasi-identifiers' (DOB, Full Address) as categorized in NIST SP 800-122. When linked, these elements create a high risk of identity theft. The context (msg-4) uses 'Regulatory Compliance' as a social engineering trigger to justify the request. In NIST terms, the 'Data Sensitivity' is high because this specific combination allows for unique identification and unauthorized access to financial or legal records.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat is risky. This information is often used to steal identities or access private accounts. It is safer to ask for a secure, official website to submit these details.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to provide sensitive background check information through your company's official secure portal or a formal application link."
+  }
+}

@@ -8,6 +8,8 @@ import WarningModal from './WarningModal';
 import './ConversationScreen.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const PII_DEBOUNCE_MS = 800;
+const LLM_POST_PII_IDLE_MS = 2500;
 
 function ConversationScreen({ conversation, sessionId, participantId, participantProlificId, variant, onComplete, conversationIndex }) {
   const navigate = useNavigate();
@@ -26,8 +28,11 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
   const [lastAssessedText, setLastAssessedText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [maskedHistory, setMaskedHistory] = useState(null);
+  const [piiSpans, setPiiSpans] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const typingTimeoutRef = useRef(null);
+  const llmTimeoutRef = useRef(null);
+  const livePipelineVersionRef = useRef(0);
   const riskRequestCounterRef = useRef(0);
   const sendInFlightRef = useRef(false);
   const assessAbortControllersRef = useRef({ pii: null, risk: null });
@@ -78,6 +83,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     setRiskPending(false);
     setIsWarningOpen(false);
     setLastAssessedText('');
+    setPiiSpans([]);
 
     const historyForMasking = initialMessages.map((m) => ({
       id: m.id,
@@ -128,6 +134,17 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     setIsDrawerOpen(false);
   };
 
+  const clearLiveTimers = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    if (llmTimeoutRef.current) {
+      clearTimeout(llmTimeoutRef.current);
+      llmTimeoutRef.current = null;
+    }
+  };
+
   const abortActiveAssessRequests = () => {
     const { pii, risk } = assessAbortControllersRef.current;
     if (pii) {
@@ -145,22 +162,109 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     || error?.name === 'AbortError'
   );
 
+  const queueLiveLlmStage = (pipelineVersion, textToUse) => {
+    if (llmTimeoutRef.current) {
+      clearTimeout(llmTimeoutRef.current);
+      llmTimeoutRef.current = null;
+    }
+    llmTimeoutRef.current = setTimeout(() => {
+      if (pipelineVersion !== livePipelineVersionRef.current) {
+        return;
+      }
+      assessRisk(textToUse, { liveTyping: true });
+    }, LLM_POST_PII_IDLE_MS);
+  };
+
+  const runLivePiiStage = async (pipelineVersion, textToUse) => {
+    if (pipelineVersion !== livePipelineVersionRef.current) {
+      return;
+    }
+    if (!textToUse.trim()) {
+      return;
+    }
+
+    if (variant !== 'A') {
+      setPiiSpans([]);
+      queueLiveLlmStage(pipelineVersion, textToUse);
+      return;
+    }
+
+    let piiController = null;
+    try {
+      piiController = new AbortController();
+      assessAbortControllersRef.current.pii = piiController;
+      const piiResponse = await axios.post(
+        `${API_BASE_URL}/pii/detect`,
+        { draft_text: textToUse },
+        { timeout: 30000, signal: piiController.signal }
+      );
+      if (pipelineVersion !== livePipelineVersionRef.current) {
+        return;
+      }
+
+      const spans = piiResponse.data?.pii_spans || [];
+      const masked = piiResponse.data?.masked_text || null;
+      const hasPii = spans.length > 0;
+
+      setPiiSpans(spans);
+      setLastRawText(textToUse);
+      setLastMaskedText(masked);
+      setLastHasPii(hasPii);
+
+      if (!hasPii) {
+        setWarningState(null);
+        setLastRiskAnalysis(null);
+        setLastOfferedRewrite(null);
+        setLastShownRewrite(null);
+        setLastAssessedText(textToUse);
+        setRiskPending(false);
+        setIsWarningOpen(false);
+        return;
+      }
+
+      queueLiveLlmStage(pipelineVersion, textToUse);
+    } catch (error) {
+      if (isCanceledRequest(error)) {
+        return;
+      }
+      if (pipelineVersion !== livePipelineVersionRef.current) {
+        return;
+      }
+      console.error('[RISK] PII detection failed in live stage:', error);
+      setPiiSpans([]);
+      setLastRawText(textToUse);
+      setLastMaskedText(null);
+      setLastHasPii(false);
+      setWarningState(null);
+      setLastRiskAnalysis(null);
+      setLastOfferedRewrite(null);
+      setLastShownRewrite(null);
+      setLastAssessedText(textToUse);
+      setRiskPending(false);
+      setIsWarningOpen(false);
+    } finally {
+      if (piiController && assessAbortControllersRef.current.pii === piiController) {
+        assessAbortControllersRef.current.pii = null;
+      }
+    }
+  };
+
   const handleTyping = (text) => {
     setDraftText(text);
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
     // New text input should immediately invalidate/abort prior analysis.
+    clearLiveTimers();
+    livePipelineVersionRef.current += 1;
     riskRequestCounterRef.current += 1;
     abortActiveAssessRequests();
     setRiskPending(false);
 
     if (text.trim()) {
+      const pipelineVersion = livePipelineVersionRef.current;
+      const textToUse = text.trim();
       typingTimeoutRef.current = setTimeout(() => {
-        assessRisk(text);
-      }, 800);
+        runLivePiiStage(pipelineVersion, textToUse);
+      }, PII_DEBOUNCE_MS);
     } else {
       setWarningState(null);
       setLastRiskAnalysis(null);
@@ -172,15 +276,8 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
       setLastRawText(null);
       setLastHasPii(false);
       setLastAssessedText('');
+      setPiiSpans([]);
     }
-  };
-
-  const handlePiiDetected = (piiData) => {
-    if (!piiData) return;
-    const sourceText = piiData.sourceText || draftText;
-    setLastRawText(sourceText);
-    setLastMaskedText(piiData.maskedText || null);
-    setLastHasPii(Boolean(piiData.hasPii));
   };
 
   const toSingleLineReasoning = (value) => {
@@ -192,7 +289,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
 
   const assessRisk = async (text, options = {}) => {
     const textToUse = text.trim();
-    const { openOnComplete = false, silent = false } = options;
+    const { openOnComplete = false, silent = false, liveTyping = false } = options;
     if (!textToUse) return null;
 
     const requestId = ++riskRequestCounterRef.current;
@@ -209,6 +306,9 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     let hasPii = variant !== 'A';
     let piiController = null;
     let riskController = null;
+    if (variant !== 'A') {
+      setPiiSpans([]);
+    }
 
     if (variant === 'A') {
       if (lastRawText && lastRawText.trim() === textToUse) {
@@ -229,6 +329,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
           const spans = piiResponse.data?.pii_spans || [];
           maskedToUse = piiResponse.data?.masked_text || null;
           hasPii = spans.length > 0;
+          setPiiSpans(spans);
           setLastRawText(textToUse);
           setLastMaskedText(maskedToUse);
           setLastHasPii(hasPii);
@@ -239,10 +340,12 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
           console.error('[RISK] PII detection failed for risk assessment:', error);
           hasPii = false;
           maskedToUse = null;
+          setPiiSpans([]);
         }
       }
 
       if (!hasPii) {
+        setPiiSpans([]);
         if (!silent) {
           setWarningState(null);
           setLastRiskAnalysis(null);
@@ -275,7 +378,8 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
         masked_history: maskedHistory || conversationHistory,
         conversation_history: conversationHistory,
         session_id: conversationIndex + 1,
-        participant_prolific_id: participantProlificId || null
+        participant_prolific_id: participantProlificId || null,
+        live_typing: Boolean(liveTyping)
       }, { signal: riskController.signal });
 
       if (requestId !== riskRequestCounterRef.current) {
@@ -287,15 +391,9 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
         riskLevel: response.data.risk_level,
         saferRewrite: rewrite,
         primaryRiskFactors: response.data.primary_risk_factors || [],
-        explanationNist: response.data.Explanation_NIST || response.data.explanation || response.data.output_2?.Explanation_NIST || response.data.output_2?.explanation || '',
         reasoning: toSingleLineReasoning(
-          response.data.Reasoning || response.data.reasoning_steps || response.data.output_2?.Reasoning || response.data.output_2?.reasoning_steps || ''
+          response.data.reasoning || response.data.output_2?.reasoning || ''
         ),
-        thoughtSummary:
-          response.data.Thought_Summary
-          || response.data.output_2?.Thought_Summary
-          || response.data.output_2?.thought_summary
-          || '',
         originalInput: response.data.output_2?.original_user_message || maskedToUse || textToUse,
         output1: response.data.output_1 || {},
         output2: response.data.output_2 || {}
@@ -353,10 +451,8 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
 
     // Prevent a pending debounce-triggered assessment from racing and
     // overriding the explicit icon-click assessment request.
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
-    }
+    clearLiveTimers();
+    livePipelineVersionRef.current += 1;
     abortActiveAssessRequests();
 
     setIsWarningOpen(true);
@@ -374,6 +470,8 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
 
     sendInFlightRef.current = true;
     setIsSending(true);
+    clearLiveTimers();
+    livePipelineVersionRef.current += 1;
     riskRequestCounterRef.current += 1;
     abortActiveAssessRequests();
 
@@ -397,6 +495,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     setLastShownRewrite(null);
     setIsWarningOpen(false);
     setLastAssessedText('');
+    setPiiSpans([]);
     setCurrentMessageIndex((prev) => prev + 1);
 
     if (variant === 'A' && (!analysis || lastAssessedText !== finalText)) {
@@ -433,20 +532,18 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
       if (analysis) {
         messagePayload.risk_level = analysis.riskLevel || null;
         messagePayload.primary_risk_factors = analysis.primaryRiskFactors || [];
-        messagePayload.Explanation_NIST = analysis.explanationNist || '';
-        messagePayload.Reasoning = analysis.reasoning || '';
-        messagePayload.Thought_Summary = analysis.thoughtSummary || '';
+        messagePayload.reasoning = analysis.reasoning || '';
 
-        messagePayload.pii_sensitivity_level = output1.pii_sensitivity?.level || null;
-        messagePayload.pii_sensitivity_explanation = output1.pii_sensitivity?.explanation || null;
-        messagePayload.contextual_necessity_level = output1.contextual_necessity?.level || null;
-        messagePayload.contextual_necessity_explanation = output1.contextual_necessity?.explanation || null;
-        messagePayload.intent_trajectory_level = output1.intent_trajectory?.level || null;
-        messagePayload.intent_trajectory_explanation = output1.intent_trajectory?.explanation || null;
+        messagePayload.linkability_risk_level = output1.linkability_risk?.level || null;
+        messagePayload.linkability_risk_explanation = output1.linkability_risk?.explanation || null;
+        messagePayload.authentication_baiting_level = output1.authentication_baiting?.level || null;
+        messagePayload.authentication_baiting_explanation = output1.authentication_baiting?.explanation || null;
+        messagePayload.contextual_alignment_level = output1.contextual_alignment?.level || null;
+        messagePayload.contextual_alignment_explanation = output1.contextual_alignment?.explanation || null;
+        messagePayload.platform_trust_obligation_level = output1.platform_trust_obligation?.level || null;
+        messagePayload.platform_trust_obligation_explanation = output1.platform_trust_obligation?.explanation || null;
         messagePayload.psychological_pressure_level = output1.psychological_pressure?.level || null;
         messagePayload.psychological_pressure_explanation = output1.psychological_pressure?.explanation || null;
-        messagePayload.identity_trust_signals_flags = output1.identity_trust_signals?.flags || [];
-        messagePayload.identity_trust_signals_explanation = output1.identity_trust_signals?.explanation || null;
       }
 
       await axios.post(`${API_BASE_URL}/api/participants/message`, messagePayload);
@@ -483,18 +580,14 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
       riskRequestCounterRef.current += 1;
       setRiskPending(false);
     }
+    clearLiveTimers();
+    livePipelineVersionRef.current += 1;
     abortActiveAssessRequests();
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
-    }
     setIsWarningOpen(false);
   };
 
   useEffect(() => () => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+    clearLiveTimers();
     abortActiveAssessRequests();
   }, []);
 
@@ -517,8 +610,8 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
         onTextChange={handleTyping}
         onSend={handleSend}
         variant={variant}
+        piiSpans={piiSpans}
         onPiiClick={handleOpenWarning}
-        onPiiDetected={handlePiiDetected}
         isSending={isSending}
       />
       {isWarningOpen && (riskPending || warningState) && (

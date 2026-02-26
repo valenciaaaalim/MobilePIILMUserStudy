@@ -30,16 +30,11 @@ class RiskAssessmentRequest(BaseModel):
 
 class RiskAssessmentResponse(BaseModel):
     """Risk assessment response."""
-    risk_level: str  # 'LOW', 'MEDIUM', 'HIGH'
-    Explanation_NIST: str
+    risk_level: str  # 'LOW', 'MODERATE', 'HIGH'
     safer_rewrite: str
     show_warning: bool
     primary_risk_factors: List[str] = Field(default_factory=list)
-    Reasoning: Optional[str] = None
-    Thought_Summary: Optional[str] = None
-    # Backward-compatible aliases for older frontend code
-    explanation: Optional[str] = None
-    reasoning_steps: Optional[str] = None
+    reasoning: Optional[str] = None
     output_1: Optional[Dict[str, Any]] = None
     output_2: Optional[Dict[str, Any]] = None
 
@@ -124,19 +119,18 @@ class ScenarioResponseCreate(BaseModel):
     masked_text: Optional[str] = None  # PII-masked version
     suggested_rewrite: Optional[str] = None  # LLM suggested rewrite
     reasoning: Optional[str] = None
-    explanation_nist: Optional[str] = None
     risk_level: Optional[str] = None
     primary_risk_factors: Optional[str] = None
-    pii_sensitivity_level: Optional[str] = None
-    pii_sensitivity_explanation: Optional[str] = None
-    contextual_necessity_level: Optional[str] = None
-    contextual_necessity_explanation: Optional[str] = None
-    intent_trajectory_level: Optional[str] = None
-    intent_trajectory_explanation: Optional[str] = None
+    linkability_risk_level: Optional[str] = None
+    linkability_risk_explanation: Optional[str] = None
+    authentication_baiting_level: Optional[str] = None
+    authentication_baiting_explanation: Optional[str] = None
+    contextual_alignment_level: Optional[str] = None
+    contextual_alignment_explanation: Optional[str] = None
+    platform_trust_obligation_level: Optional[str] = None
+    platform_trust_obligation_explanation: Optional[str] = None
     psychological_pressure_level: Optional[str] = None
     psychological_pressure_explanation: Optional[str] = None
-    identity_trust_signals_flags: Optional[str] = None
-    identity_trust_signals_explanation: Optional[str] = None
     final_message: Optional[str] = None  # Final sent message
     accepted_rewrite: Optional[bool] = None  # Whether user accepted rewrite
 
@@ -147,19 +141,18 @@ class ScenarioResponseUpdate(BaseModel):
     masked_text: Optional[str] = None
     suggested_rewrite: Optional[str] = None
     reasoning: Optional[str] = None
-    explanation_nist: Optional[str] = None
     risk_level: Optional[str] = None
     primary_risk_factors: Optional[str] = None
-    pii_sensitivity_level: Optional[str] = None
-    pii_sensitivity_explanation: Optional[str] = None
-    contextual_necessity_level: Optional[str] = None
-    contextual_necessity_explanation: Optional[str] = None
-    intent_trajectory_level: Optional[str] = None
-    intent_trajectory_explanation: Optional[str] = None
+    linkability_risk_level: Optional[str] = None
+    linkability_risk_explanation: Optional[str] = None
+    authentication_baiting_level: Optional[str] = None
+    authentication_baiting_explanation: Optional[str] = None
+    contextual_alignment_level: Optional[str] = None
+    contextual_alignment_explanation: Optional[str] = None
+    platform_trust_obligation_level: Optional[str] = None
+    platform_trust_obligation_explanation: Optional[str] = None
     psychological_pressure_level: Optional[str] = None
     psychological_pressure_explanation: Optional[str] = None
-    identity_trust_signals_flags: Optional[str] = None
-    identity_trust_signals_explanation: Optional[str] = None
     final_message: Optional[str] = None
     accepted_rewrite: Optional[bool] = None
     started_at: Optional[datetime] = None
@@ -175,19 +168,18 @@ class ScenarioResponseSchema(BaseModel):
     masked_text: Optional[str]
     suggested_rewrite: Optional[str]
     reasoning: Optional[str]
-    explanation_nist: Optional[str]
     risk_level: Optional[str]
     primary_risk_factors: Optional[str]
-    pii_sensitivity_level: Optional[str]
-    pii_sensitivity_explanation: Optional[str]
-    contextual_necessity_level: Optional[str]
-    contextual_necessity_explanation: Optional[str]
-    intent_trajectory_level: Optional[str]
-    intent_trajectory_explanation: Optional[str]
+    linkability_risk_level: Optional[str]
+    linkability_risk_explanation: Optional[str]
+    authentication_baiting_level: Optional[str]
+    authentication_baiting_explanation: Optional[str]
+    contextual_alignment_level: Optional[str]
+    contextual_alignment_explanation: Optional[str]
+    platform_trust_obligation_level: Optional[str]
+    platform_trust_obligation_explanation: Optional[str]
     psychological_pressure_level: Optional[str]
     psychological_pressure_explanation: Optional[str]
-    identity_trust_signals_flags: Optional[str]
-    identity_trust_signals_explanation: Optional[str]
     final_message: Optional[str]
     accepted_rewrite: Optional[bool]
     started_at: Optional[datetime]
@@ -351,19 +343,16 @@ class ScenarioMessageRecord(BaseModel):
     # Full risk analysis payload to persist from Output_1 and Output_2
     risk_level: Optional[str] = None
     primary_risk_factors: Optional[List[str]] = None
-    Explanation_NIST: Optional[str] = None
-    Reasoning: Optional[str] = None
-    pii_sensitivity_level: Optional[str] = None
-    pii_sensitivity_explanation: Optional[str] = None
-    contextual_necessity_level: Optional[str] = None
-    contextual_necessity_explanation: Optional[str] = None
-    intent_trajectory_level: Optional[str] = None
-    intent_trajectory_explanation: Optional[str] = None
+    reasoning: Optional[str] = None
+    linkability_risk_level: Optional[str] = None
+    linkability_risk_explanation: Optional[str] = None
+    authentication_baiting_level: Optional[str] = None
+    authentication_baiting_explanation: Optional[str] = None
+    contextual_alignment_level: Optional[str] = None
+    contextual_alignment_explanation: Optional[str] = None
+    platform_trust_obligation_level: Optional[str] = None
+    platform_trust_obligation_explanation: Optional[str] = None
     psychological_pressure_level: Optional[str] = None
     psychological_pressure_explanation: Optional[str] = None
-    identity_trust_signals_flags: Optional[List[str]] = None
-    identity_trust_signals_explanation: Optional[str] = None
-    # Backward-compatible legacy fields
+    # Backward-compatible legacy field
     final_raw_text: Optional[str] = None
-    llm_explanation: Optional[str] = None
-    reasoning_steps: Optional[str] = None

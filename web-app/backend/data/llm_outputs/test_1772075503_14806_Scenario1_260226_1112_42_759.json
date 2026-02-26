@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combines full name, specific date of birth, and full residential address."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Sharing full identity details via chat before formal interview is unnecessary."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The requester is leading toward a potential identity theft scenario."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses authority (compliance) and reward (job opportunity) to create urgency."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified recruiter",
+        "Off-platform request",
+        "Early data collection"
+      ],
+      "Explanation": "No proof of identity or official company portal provided for data."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Direct disclosure of high-impact identity data",
+      "Social engineering through job opportunity pretext",
+      "Bypassing secure HR channels for data collection"
+    ],
+    "Explanation_NIST": "The message contains PII categorized under NIST SP 800-122 as Direct Identifiers (Full Name) and Quasi-identifiers (DOB, Location/Address). The combination of these specific fields constitutes a high risk for identity theft. The context involves a social-engineering tactic where a 'recruiter' uses the promise of a job and 'regulatory compliance' to justify the immediate collection of sensitive data outside of a secure HR portal or formal background check service.",
+    "Reasoning": "Sharing your full name, birthday, and address over a chat is risky. Real companies usually ask for this info through a secure, official website later.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my personal details over chat. Do you have a secure company portal or a formal application link where I can submit my information?"
+  }
+}

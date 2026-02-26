@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Full name, birth date, and address enable significant identity theft risks."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Sensitive data should not be shared via chat before official interviews."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "The sender is rapidly escalating toward gathering high-value personal identifiers."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The sender uses job opportunity and compliance as social triggers."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Authority",
+        "Insecure Channel Request",
+        "Recruitment Scams"
+      ],
+      "Explanation": "Asking for birth dates and addresses in chat is a red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET],",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Risk",
+      "Recruitment Social Engineering",
+      "Insecure Data Transmission"
+    ],
+    "Explanation_NIST": "The message contains direct identifiers (Full Name) and quasi-identifiers (Date of Birth, Street Address) as defined in NIST SP 800-122. The combination of these data points significantly increases the 'linkability' of the user's identity. The context is a 'Recruitment Scam' social engineering pattern where the attacker uses 'Authority' (regulatory compliance) and 'Liking' (professional praise) to induce the user to bypass standard security protocols. Providing these details over a chat interface instead of a secure HRIS portal creates a high probability of unauthorized disclosure and identity fraud.",
+    "Reasoning": "Sharing your full name, birthday, and home address with someone you just met online is very risky. Legitimate employers will usually ask you to use a secure website for background checks instead of a chat message.",
+    "Rewrite": "I'm definitely interested in the position. Could you send me a link to your company\u2019s secure application portal so I can provide my details safely?"
+  }
+}

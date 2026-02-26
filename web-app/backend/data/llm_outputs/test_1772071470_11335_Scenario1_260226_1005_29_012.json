@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combination of full name, birth date, and physical address enables identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Official background checks should use secure portals, not informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "MEDIUM",
+      "Explanation": "The conversation is moving toward collecting sensitive data via social engineering."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Recruiter creates a sense of necessity and urgency for a job opportunity."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Off-platform Data Request"
+      ],
+      "Explanation": "Soliciting sensitive personal info via chat is a common phishing red flag."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, 42 Maple Street, [LOCATION_CITY],",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Direct disclosure of high-impact PII (NIST SP 800-122)",
+      "Vulnerability to social engineering via job-offer pretext",
+      "Lack of secure data transmission channel"
+    ],
+    "Explanation_NIST": "The message contains several NIST SP 800-122 categories: Direct Identifiers (Full Name) and Quasi-identifiers (DOB and Location Address). When linked, these create a high 'Permissibility of Identification' and 'Likelihood of Harm.' The requester uses a 'Professional Opportunity' pretext to bypass standard security protocols, which is a hallmark of social engineering. Providing this specific combination of data in an unencrypted chat increases the risk of identity theft and unauthorized profiling significantly.",
+    "Reasoning": "Sharing your full name, birthday, and home address in a chat is very risky. It is safer to ask for a secure, official link or website to submit your details for a background check.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to provide my personal details through a secure company portal or official background check link. Could you send that over?"
+  }
+}

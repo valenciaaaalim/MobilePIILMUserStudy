@@ -110,7 +110,7 @@ class RiskAssessmentService:
         return default
 
     def _canonical_key(self, value: Any) -> str:
-        """Normalize keys like 'Reasoning_Steps' / 'reasoning steps' to a stable token."""
+        """Normalize variant key casing/separators to a stable token."""
         return re.sub(r"[^a-z0-9]", "", str(value).lower())
 
     def _ensure_list(self, value: Any) -> List[Any]:
@@ -121,14 +121,14 @@ class RiskAssessmentService:
             return []
         return [value]
 
-    def _normalize_thought_summary(self, value: Any) -> str:
-        """Normalize thought summary payloads to a single text field."""
-        if isinstance(value, list):
-            parts = [str(item).strip() for item in value if str(item).strip()]
-            return "\n".join(parts)
-        if value is None:
-            return ""
-        return str(value).strip()
+    def _normalize_risk_level(self, value: Any) -> str:
+        """Normalize model risk labels to LOW|MODERATE|HIGH."""
+        normalized = str(value or "").strip().upper()
+        if normalized in {"MEDIUM", "MODERATE"}:
+            return "MODERATE"
+        if normalized == "HIGH":
+            return "HIGH"
+        return "LOW"
 
     def _save_output_2(
         self,
@@ -239,8 +239,7 @@ class RiskAssessmentService:
 
     def _normalize_risk_payload(
         self,
-        raw: Dict[str, Any],
-        thought_summaries: Optional[List[str]] = None
+        raw: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Normalize model output into canonical Output_1/Output_2 schema.
@@ -253,43 +252,54 @@ class RiskAssessmentService:
         if not isinstance(output_2_raw, dict):
             output_2_raw = {}
 
-        pii_sensitivity_raw = self._get_value(output_1_raw, ["PII_Sensitivity", "pii_sensitivity"], {})
-        contextual_necessity_raw = self._get_value(output_1_raw, ["Contextual_Necessity", "contextual_necessity"], {})
-        intent_trajectory_raw = self._get_value(output_1_raw, ["Intent_Trajectory", "intent_trajectory"], {})
+        linkability_risk_raw = self._get_value(
+            output_1_raw,
+            ["Linkability_Risk", "linkability_risk", "linkabilityRisk"],
+            {},
+        )
+        authentication_baiting_raw = self._get_value(
+            output_1_raw,
+            ["Authentication_Baiting", "authentication_baiting", "authenticationBaiting"],
+            {},
+        )
+        contextual_alignment_raw = self._get_value(
+            output_1_raw,
+            ["Contextual_Alignment", "contextual_alignment", "contextualAlignment"],
+            {},
+        )
+        platform_trust_obligation_raw = self._get_value(
+            output_1_raw,
+            ["Platform_Trust_Obligation", "platform_trust_obligation", "platformTrustObligation"],
+            {},
+        )
         psychological_pressure_raw = self._get_value(output_1_raw, ["Psychological_Pressure", "psychological_pressure"], {})
-        identity_trust_signals_raw = self._get_value(output_1_raw, ["Identity_Trust_Signals", "identity_trust_signals"], {})
 
         normalized_output_1 = {
-            "PII_Sensitivity": {
-                "Level": self._get_value(pii_sensitivity_raw, ["Level", "level"], ""),
-                "Explanation": self._get_value(pii_sensitivity_raw, ["Explanation", "explanation"], ""),
+            "Linkability_Risk": {
+                "Level": self._get_value(linkability_risk_raw, ["Level", "level"], ""),
+                "Explanation": self._get_value(linkability_risk_raw, ["Explanation", "explanation"], ""),
             },
-            "Contextual_Necessity": {
-                "Level": self._get_value(contextual_necessity_raw, ["Level", "level"], ""),
-                "Explanation": self._get_value(contextual_necessity_raw, ["Explanation", "explanation"], ""),
+            "Authentication_Baiting": {
+                "Level": self._get_value(authentication_baiting_raw, ["Level", "level"], ""),
+                "Explanation": self._get_value(authentication_baiting_raw, ["Explanation", "explanation"], ""),
             },
-            "Intent_Trajectory": {
-                "Level": self._get_value(intent_trajectory_raw, ["Level", "level"], ""),
-                "Explanation": self._get_value(intent_trajectory_raw, ["Explanation", "explanation"], ""),
+            "Contextual_Alignment": {
+                "Level": self._get_value(contextual_alignment_raw, ["Level", "level"], ""),
+                "Explanation": self._get_value(contextual_alignment_raw, ["Explanation", "explanation"], ""),
+            },
+            "Platform_Trust_Obligation": {
+                "Level": self._get_value(platform_trust_obligation_raw, ["Level", "level"], ""),
+                "Explanation": self._get_value(platform_trust_obligation_raw, ["Explanation", "explanation"], ""),
             },
             "Psychological_Pressure": {
                 "Level": self._get_value(psychological_pressure_raw, ["Level", "level"], ""),
                 "Explanation": self._get_value(psychological_pressure_raw, ["Explanation", "explanation"], ""),
             },
-            "Identity_Trust_Signals": {
-                "Flags": self._ensure_list(self._get_value(identity_trust_signals_raw, ["Flags", "flags"], [])),
-                "Explanation": self._get_value(identity_trust_signals_raw, ["Explanation", "explanation"], ""),
-            },
         }
 
-        explanation_nist = self._get_value(
-            output_2_raw,
-            ["Explanation_NIST", "explanation_nist", "Explanation", "explanation"],
-            "",
-        )
         reasoning = self._get_value(
             output_2_raw,
-            ["Reasoning", "reasoning", "Reasoning_Steps", "reasoning_steps", "reasoningSteps"],
+            ["Reasoning", "reasoning"],
             "",
         )
         normalized_output_2 = {
@@ -298,9 +308,9 @@ class RiskAssessmentService:
                 ["Original_User_Message", "original_user_message", "originalUserMessage"],
                 "",
             ),
-            "Risk_Level": str(
+            "Risk_Level": self._normalize_risk_level(
                 self._get_value(output_2_raw, ["Risk_Level", "risk_level", "riskLevel"], "LOW")
-            ).upper(),
+            ),
             "Primary_Risk_Factors": self._ensure_list(
                 self._get_value(
                     output_2_raw,
@@ -308,11 +318,10 @@ class RiskAssessmentService:
                     [],
                 )
             ),
-            "Explanation_NIST": explanation_nist,
             "Reasoning": reasoning,
             "Rewrite": self._get_value(
                 output_2_raw,
-                ["Rewrite", "rewrite", "Safer_Rewrite", "safer_rewrite"],
+                ["Rewrite", "rewrite"],
                 "",
             ),
         }
@@ -341,7 +350,7 @@ class RiskAssessmentService:
             masked_history: Masked history (if already processed)
         
         Returns:
-            Risk assessment result with risk_level, explanation, safer_rewrite, etc.
+            Risk assessment result with risk_level, reasoning, safer_rewrite, etc.
         """
         try:
             # ALWAYS use masked version if provided - this is critical for PII privacy
@@ -377,29 +386,23 @@ class RiskAssessmentService:
             # Step 2: Call LLM API for Output 2
             logger.info("Calling LLM API for risk assessment")
             risk_result = self.llm.generate_json_content(first_prompt)
-            thought_summaries = (
-                self.llm.get_last_thought_summaries()
-                if hasattr(self.llm, "get_last_thought_summaries")
-                else []
-            )
             normalized_result = self._normalize_risk_payload(
-                risk_result if isinstance(risk_result, dict) else {},
-                thought_summaries=thought_summaries,
+                risk_result if isinstance(risk_result, dict) else {}
             )
             self._save_output_2(normalized_result, session_id=session_id, prolific_id=prolific_id)
 
             output_1 = normalized_result.get("Output_1", {})
             output_2 = normalized_result.get("Output_2", {})
 
-            risk_level = str(self._get_value(output_2, ["Risk_Level", "risk_level", "riskLevel"], "LOW")).upper()
-            explanation = self._get_value(output_2, ["Explanation_NIST", "explanation_nist"], "")
-            show_warning = risk_level in {"MEDIUM", "HIGH"}
-            reasoning_steps = self._get_value(
+            risk_level = self._normalize_risk_level(
+                self._get_value(output_2, ["Risk_Level", "risk_level", "riskLevel"], "LOW")
+            )
+            show_warning = risk_level in {"MODERATE", "HIGH"}
+            reasoning = self._get_value(
                 output_2,
                 ["Reasoning", "reasoning"],
                 ""
             )
-            thought_summary = self._normalize_thought_summary(thought_summaries)
             original_user_message = self._get_value(
                 output_2,
                 ["Original_User_Message", "original_user_message", "originalUserMessage"],
@@ -421,54 +424,52 @@ class RiskAssessmentService:
             )
             if not safer_rewrite or self._contains_mask_tokens(safer_rewrite):
                 safer_rewrite = self._fallback_conversational_rewrite(draft_text=draft_text, masked_draft=masked_draft)
-            if not reasoning_steps:
-                reasoning_steps = self._fallback_reasoning()
+            if not reasoning:
+                reasoning = self._fallback_reasoning()
 
-            pii_sensitivity = self._get_value(output_1, ["PII_Sensitivity", "pii_sensitivity"], {})
-            contextual_necessity = self._get_value(output_1, ["Contextual_Necessity", "contextual_necessity"], {})
-            intent_trajectory = self._get_value(output_1, ["Intent_Trajectory", "intent_trajectory"], {})
+            linkability_risk = self._get_value(output_1, ["Linkability_Risk", "linkability_risk"], {})
+            authentication_baiting = self._get_value(output_1, ["Authentication_Baiting", "authentication_baiting"], {})
+            contextual_alignment = self._get_value(output_1, ["Contextual_Alignment", "contextual_alignment"], {})
+            platform_trust_obligation = self._get_value(
+                output_1,
+                ["Platform_Trust_Obligation", "platform_trust_obligation"],
+                {},
+            )
             psychological_pressure = self._get_value(output_1, ["Psychological_Pressure", "psychological_pressure"], {})
-            identity_trust_signals = self._get_value(output_1, ["Identity_Trust_Signals", "identity_trust_signals"], {})
             
             return {
                 "risk_level": risk_level,
-                "explanation": explanation,
                 "safer_rewrite": safer_rewrite,
                 "show_warning": show_warning,
-                "reasoning_steps": reasoning_steps,
-                "thought_summary": thought_summary,
+                "reasoning": reasoning,
                 "primary_risk_factors": primary_risk_factors,
                 "output_1": {
-                    "pii_sensitivity": {
-                        "level": self._get_value(pii_sensitivity, ["Level", "level"], ""),
-                        "explanation": self._get_value(pii_sensitivity, ["Explanation", "explanation"], "")
+                    "linkability_risk": {
+                        "level": self._get_value(linkability_risk, ["Level", "level"], ""),
+                        "explanation": self._get_value(linkability_risk, ["Explanation", "explanation"], "")
                     },
-                    "contextual_necessity": {
-                        "level": self._get_value(contextual_necessity, ["Level", "level"], ""),
-                        "explanation": self._get_value(contextual_necessity, ["Explanation", "explanation"], "")
+                    "authentication_baiting": {
+                        "level": self._get_value(authentication_baiting, ["Level", "level"], ""),
+                        "explanation": self._get_value(authentication_baiting, ["Explanation", "explanation"], "")
                     },
-                    "intent_trajectory": {
-                        "level": self._get_value(intent_trajectory, ["Level", "level"], ""),
-                        "explanation": self._get_value(intent_trajectory, ["Explanation", "explanation"], "")
+                    "contextual_alignment": {
+                        "level": self._get_value(contextual_alignment, ["Level", "level"], ""),
+                        "explanation": self._get_value(contextual_alignment, ["Explanation", "explanation"], "")
+                    },
+                    "platform_trust_obligation": {
+                        "level": self._get_value(platform_trust_obligation, ["Level", "level"], ""),
+                        "explanation": self._get_value(platform_trust_obligation, ["Explanation", "explanation"], "")
                     },
                     "psychological_pressure": {
                         "level": self._get_value(psychological_pressure, ["Level", "level"], ""),
                         "explanation": self._get_value(psychological_pressure, ["Explanation", "explanation"], "")
-                    },
-                    "identity_trust_signals": {
-                        "flags": self._ensure_list(self._get_value(identity_trust_signals, ["Flags", "flags"], [])),
-                        "explanation": self._get_value(identity_trust_signals, ["Explanation", "explanation"], "")
                     }
                 },
                 "output_2": {
                     "original_user_message": original_user_message,
                     "risk_level": risk_level,
                     "primary_risk_factors": primary_risk_factors,
-                    "Explanation_NIST": explanation,
-                    "Reasoning": reasoning_steps,
-                    # Backward-compatible keys
-                    "explanation": explanation,
-                    "reasoning_steps": reasoning_steps,
+                    "reasoning": reasoning,
                     "rewrite": safer_rewrite
                 }
             }
@@ -477,72 +478,67 @@ class RiskAssessmentService:
             logger.error(f"Risk assessment error: {e}", exc_info=True)
             # Keep warning flow active when PII was already detected, even if LLM is unavailable.
             fallback_rewrite = self._fallback_conversational_rewrite(draft_text=draft_text, masked_draft=masked_draft)
-            fallback_risk = "MEDIUM" if masked_draft else "LOW"
+            fallback_risk = "MODERATE" if masked_draft else "LOW"
             fallback_reasoning = self._fallback_reasoning()
-            fallback_pii_level = "MEDIUM" if masked_draft else "LOW"
+            fallback_linkability_level = "MODERATE" if masked_draft else "LOW"
             fallback_output_1 = {
-                "pii_sensitivity": {
-                    "level": fallback_pii_level,
+                "linkability_risk": {
+                    "level": fallback_linkability_level,
                     "explanation": "Estimated fallback because risk model output was unavailable."
                 },
-                "contextual_necessity": {
+                "authentication_baiting": {
+                    "level": "UNKNOWN",
+                    "explanation": "Could not evaluate auth-baiting due temporary model unavailability."
+                },
+                "contextual_alignment": {
                     "level": "UNKNOWN",
                     "explanation": "Could not evaluate context due temporary model unavailability."
                 },
-                "intent_trajectory": {
+                "platform_trust_obligation": {
                     "level": "UNKNOWN",
-                    "explanation": "Could not evaluate intent due temporary model unavailability."
+                    "explanation": "Could not evaluate platform trust due temporary model unavailability."
                 },
                 "psychological_pressure": {
                     "level": "UNKNOWN",
                     "explanation": "Could not evaluate pressure due temporary model unavailability."
-                },
-                "identity_trust_signals": {
-                    "flags": [],
-                    "explanation": "Trust-signal analysis unavailable in fallback mode."
                 }
             }
             fallback_output_2 = {
                 "original_user_message": draft_text,
                 "risk_level": fallback_risk,
                 "primary_risk_factors": [],
-                "Explanation_NIST": f"Error during assessment: {str(e)}",
-                "Reasoning": fallback_reasoning,
-                # Backward-compatible keys
-                "explanation": f"Error during assessment: {str(e)}",
-                "reasoning_steps": fallback_reasoning,
+                "reasoning": fallback_reasoning,
                 "rewrite": fallback_rewrite
             }
             try:
                 self._save_output_2(
                     {
                         "Output_1": {
-                            "PII_Sensitivity": {
-                                "Level": fallback_output_1["pii_sensitivity"]["level"],
-                                "Explanation": fallback_output_1["pii_sensitivity"]["explanation"],
+                            "Linkability_Risk": {
+                                "Level": fallback_output_1["linkability_risk"]["level"],
+                                "Explanation": fallback_output_1["linkability_risk"]["explanation"],
                             },
-                            "Contextual_Necessity": {
-                                "Level": fallback_output_1["contextual_necessity"]["level"],
-                                "Explanation": fallback_output_1["contextual_necessity"]["explanation"],
+                            "Authentication_Baiting": {
+                                "Level": fallback_output_1["authentication_baiting"]["level"],
+                                "Explanation": fallback_output_1["authentication_baiting"]["explanation"],
                             },
-                            "Intent_Trajectory": {
-                                "Level": fallback_output_1["intent_trajectory"]["level"],
-                                "Explanation": fallback_output_1["intent_trajectory"]["explanation"],
+                            "Contextual_Alignment": {
+                                "Level": fallback_output_1["contextual_alignment"]["level"],
+                                "Explanation": fallback_output_1["contextual_alignment"]["explanation"],
+                            },
+                            "Platform_Trust_Obligation": {
+                                "Level": fallback_output_1["platform_trust_obligation"]["level"],
+                                "Explanation": fallback_output_1["platform_trust_obligation"]["explanation"],
                             },
                             "Psychological_Pressure": {
                                 "Level": fallback_output_1["psychological_pressure"]["level"],
                                 "Explanation": fallback_output_1["psychological_pressure"]["explanation"],
-                            },
-                            "Identity_Trust_Signals": {
-                                "Flags": fallback_output_1["identity_trust_signals"]["flags"],
-                                "Explanation": fallback_output_1["identity_trust_signals"]["explanation"],
                             },
                         },
                         "Output_2": {
                             "Original_User_Message": draft_text,
                             "Risk_Level": fallback_risk,
                             "Primary_Risk_Factors": [],
-                            "Explanation_NIST": f"Error during assessment: {str(e)}",
                             "Reasoning": fallback_reasoning,
                             "Rewrite": fallback_rewrite,
                         },
@@ -555,12 +551,10 @@ class RiskAssessmentService:
                 logger.warning("[LLM] Failed to persist fallback output payload", exc_info=True)
             return {
                 "risk_level": fallback_risk,
-                "explanation": f"Error during assessment: {str(e)}",
                 "safer_rewrite": fallback_rewrite,
-                "show_warning": fallback_risk in {"MEDIUM", "HIGH"},
+                "show_warning": fallback_risk in {"MODERATE", "HIGH"},
                 "primary_risk_factors": [],
-                "reasoning_steps": fallback_reasoning,
-                "thought_summary": "",
+                "reasoning": fallback_reasoning,
                 "output_1": fallback_output_1,
                 "output_2": fallback_output_2,
                 "error": str(e)

@@ -182,32 +182,30 @@ def create_or_update_scenario_response(
             existing.suggested_rewrite = data.suggested_rewrite
         if data.reasoning is not None:
             existing.reasoning = data.reasoning
-        if data.explanation_nist is not None:
-            existing.explanation_nist = data.explanation_nist
         if data.risk_level is not None:
             existing.risk_level = data.risk_level
         if data.primary_risk_factors is not None:
             existing.primary_risk_factors = data.primary_risk_factors
-        if data.pii_sensitivity_level is not None:
-            existing.pii_sensitivity_level = data.pii_sensitivity_level
-        if data.pii_sensitivity_explanation is not None:
-            existing.pii_sensitivity_explanation = data.pii_sensitivity_explanation
-        if data.contextual_necessity_level is not None:
-            existing.contextual_necessity_level = data.contextual_necessity_level
-        if data.contextual_necessity_explanation is not None:
-            existing.contextual_necessity_explanation = data.contextual_necessity_explanation
-        if data.intent_trajectory_level is not None:
-            existing.intent_trajectory_level = data.intent_trajectory_level
-        if data.intent_trajectory_explanation is not None:
-            existing.intent_trajectory_explanation = data.intent_trajectory_explanation
+        if data.linkability_risk_level is not None:
+            existing.linkability_risk_level = data.linkability_risk_level
+        if data.linkability_risk_explanation is not None:
+            existing.linkability_risk_explanation = data.linkability_risk_explanation
+        if data.authentication_baiting_level is not None:
+            existing.authentication_baiting_level = data.authentication_baiting_level
+        if data.authentication_baiting_explanation is not None:
+            existing.authentication_baiting_explanation = data.authentication_baiting_explanation
+        if data.contextual_alignment_level is not None:
+            existing.contextual_alignment_level = data.contextual_alignment_level
+        if data.contextual_alignment_explanation is not None:
+            existing.contextual_alignment_explanation = data.contextual_alignment_explanation
+        if data.platform_trust_obligation_level is not None:
+            existing.platform_trust_obligation_level = data.platform_trust_obligation_level
+        if data.platform_trust_obligation_explanation is not None:
+            existing.platform_trust_obligation_explanation = data.platform_trust_obligation_explanation
         if data.psychological_pressure_level is not None:
             existing.psychological_pressure_level = data.psychological_pressure_level
         if data.psychological_pressure_explanation is not None:
             existing.psychological_pressure_explanation = data.psychological_pressure_explanation
-        if data.identity_trust_signals_flags is not None:
-            existing.identity_trust_signals_flags = data.identity_trust_signals_flags
-        if data.identity_trust_signals_explanation is not None:
-            existing.identity_trust_signals_explanation = data.identity_trust_signals_explanation
         if data.final_message is not None:
             existing.final_message = data.final_message
         if data.accepted_rewrite is not None:
@@ -224,19 +222,18 @@ def create_or_update_scenario_response(
             masked_text=data.masked_text,
             suggested_rewrite=data.suggested_rewrite,
             reasoning=data.reasoning,
-            explanation_nist=data.explanation_nist,
             risk_level=data.risk_level,
             primary_risk_factors=data.primary_risk_factors,
-            pii_sensitivity_level=data.pii_sensitivity_level,
-            pii_sensitivity_explanation=data.pii_sensitivity_explanation,
-            contextual_necessity_level=data.contextual_necessity_level,
-            contextual_necessity_explanation=data.contextual_necessity_explanation,
-            intent_trajectory_level=data.intent_trajectory_level,
-            intent_trajectory_explanation=data.intent_trajectory_explanation,
+            linkability_risk_level=data.linkability_risk_level,
+            linkability_risk_explanation=data.linkability_risk_explanation,
+            authentication_baiting_level=data.authentication_baiting_level,
+            authentication_baiting_explanation=data.authentication_baiting_explanation,
+            contextual_alignment_level=data.contextual_alignment_level,
+            contextual_alignment_explanation=data.contextual_alignment_explanation,
+            platform_trust_obligation_level=data.platform_trust_obligation_level,
+            platform_trust_obligation_explanation=data.platform_trust_obligation_explanation,
             psychological_pressure_level=data.psychological_pressure_level,
             psychological_pressure_explanation=data.psychological_pressure_explanation,
-            identity_trust_signals_flags=data.identity_trust_signals_flags,
-            identity_trust_signals_explanation=data.identity_trust_signals_explanation,
             final_message=data.final_message,
             accepted_rewrite=data.accepted_rewrite
         )
@@ -287,32 +284,28 @@ def record_scenario_message(
             existing.risk_level = data.risk_level
         if data.primary_risk_factors is not None:
             existing.primary_risk_factors = json.dumps(data.primary_risk_factors, ensure_ascii=True)
-        explanation_nist = data.Explanation_NIST if data.Explanation_NIST is not None else data.llm_explanation
-        if explanation_nist is not None:
-            existing.explanation_nist = explanation_nist
-        reasoning = data.Reasoning if data.Reasoning is not None else data.reasoning_steps
-        if reasoning is not None:
-            existing.reasoning = reasoning
-        if data.pii_sensitivity_level is not None:
-            existing.pii_sensitivity_level = data.pii_sensitivity_level
-        if data.pii_sensitivity_explanation is not None:
-            existing.pii_sensitivity_explanation = data.pii_sensitivity_explanation
-        if data.contextual_necessity_level is not None:
-            existing.contextual_necessity_level = data.contextual_necessity_level
-        if data.contextual_necessity_explanation is not None:
-            existing.contextual_necessity_explanation = data.contextual_necessity_explanation
-        if data.intent_trajectory_level is not None:
-            existing.intent_trajectory_level = data.intent_trajectory_level
-        if data.intent_trajectory_explanation is not None:
-            existing.intent_trajectory_explanation = data.intent_trajectory_explanation
+        if data.reasoning is not None:
+            existing.reasoning = data.reasoning
+        if data.linkability_risk_level is not None:
+            existing.linkability_risk_level = data.linkability_risk_level
+        if data.linkability_risk_explanation is not None:
+            existing.linkability_risk_explanation = data.linkability_risk_explanation
+        if data.authentication_baiting_level is not None:
+            existing.authentication_baiting_level = data.authentication_baiting_level
+        if data.authentication_baiting_explanation is not None:
+            existing.authentication_baiting_explanation = data.authentication_baiting_explanation
+        if data.contextual_alignment_level is not None:
+            existing.contextual_alignment_level = data.contextual_alignment_level
+        if data.contextual_alignment_explanation is not None:
+            existing.contextual_alignment_explanation = data.contextual_alignment_explanation
+        if data.platform_trust_obligation_level is not None:
+            existing.platform_trust_obligation_level = data.platform_trust_obligation_level
+        if data.platform_trust_obligation_explanation is not None:
+            existing.platform_trust_obligation_explanation = data.platform_trust_obligation_explanation
         if data.psychological_pressure_level is not None:
             existing.psychological_pressure_level = data.psychological_pressure_level
         if data.psychological_pressure_explanation is not None:
             existing.psychological_pressure_explanation = data.psychological_pressure_explanation
-        if data.identity_trust_signals_flags is not None:
-            existing.identity_trust_signals_flags = json.dumps(data.identity_trust_signals_flags, ensure_ascii=True)
-        if data.identity_trust_signals_explanation is not None:
-            existing.identity_trust_signals_explanation = data.identity_trust_signals_explanation
 
         # Determine if rewrite was accepted (final message matches rewrite)
         if data.final_rewrite_text and data.final_message:
@@ -330,20 +323,19 @@ def record_scenario_message(
             original_input=data.original_input if data.original_input is not None else data.final_raw_text,
             masked_text=data.final_masked_text,
             suggested_rewrite=data.final_rewrite_text,
-            reasoning=data.Reasoning if data.Reasoning is not None else data.reasoning_steps,
-            explanation_nist=data.Explanation_NIST if data.Explanation_NIST is not None else data.llm_explanation,
+            reasoning=data.reasoning,
             risk_level=data.risk_level,
             primary_risk_factors=json.dumps(data.primary_risk_factors, ensure_ascii=True) if data.primary_risk_factors is not None else None,
-            pii_sensitivity_level=data.pii_sensitivity_level,
-            pii_sensitivity_explanation=data.pii_sensitivity_explanation,
-            contextual_necessity_level=data.contextual_necessity_level,
-            contextual_necessity_explanation=data.contextual_necessity_explanation,
-            intent_trajectory_level=data.intent_trajectory_level,
-            intent_trajectory_explanation=data.intent_trajectory_explanation,
+            linkability_risk_level=data.linkability_risk_level,
+            linkability_risk_explanation=data.linkability_risk_explanation,
+            authentication_baiting_level=data.authentication_baiting_level,
+            authentication_baiting_explanation=data.authentication_baiting_explanation,
+            contextual_alignment_level=data.contextual_alignment_level,
+            contextual_alignment_explanation=data.contextual_alignment_explanation,
+            platform_trust_obligation_level=data.platform_trust_obligation_level,
+            platform_trust_obligation_explanation=data.platform_trust_obligation_explanation,
             psychological_pressure_level=data.psychological_pressure_level,
             psychological_pressure_explanation=data.psychological_pressure_explanation,
-            identity_trust_signals_flags=json.dumps(data.identity_trust_signals_flags, ensure_ascii=True) if data.identity_trust_signals_flags is not None else None,
-            identity_trust_signals_explanation=data.identity_trust_signals_explanation,
             final_message=data.final_message,
             accepted_rewrite=accepted_rewrite
         )

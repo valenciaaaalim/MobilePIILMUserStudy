@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Combining full name, birth date, and address enables easy identity theft."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birth date and address are common security questions for bank accounts."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are normal, but asking via chat is highly unprofessional."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Chat apps lack the legal and technical safeguards for background screening."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "The sender frames the request as a mandatory step for employment."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature sharing of sensitive identifiers",
+      "Insecure data transmission channel",
+      "Potential identity theft footprint"
+    ],
+    "Reasoning": "Contextual Advice: You are providing a complete set of identity data (name, birth date, and home address) to a recruiter you just met over a chat interface. This information is highly sensitive and is being requested before any formal interview or official company platform has been introduced. Legitimate companies use secure, encrypted portals for background checks rather than asking for this data in a standard message thread, which could be a phishing attempt to steal your identity.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to provide sensitive personal details through a secure company portal or official application link once we've had an initial interview."
+  }
+}

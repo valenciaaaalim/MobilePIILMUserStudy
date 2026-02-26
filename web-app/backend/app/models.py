@@ -98,22 +98,21 @@ class ScenarioResponse(Base):
     scenario_number = Column(Integer, nullable=False)  # 1, 2, or 3
     original_input = Column(Text, nullable=True)  # Text sent to LLM for assessment
     masked_text = Column(Text, nullable=True)  # PII-masked version
-    suggested_rewrite = Column(Text, nullable=True)  # Suggested safer rewrite from LLM
-    reasoning = Column("Reasoning", Text, nullable=True)  # Output_2 Reasoning
-    explanation_nist = Column("Explanation_NIST", Text, nullable=True)  # Output_2 Explanation
     risk_level = Column(String, nullable=True)  # Output_2 Risk_Level
+    reasoning = Column("Reasoning", Text, nullable=True)  # Output_2 Reasoning
+    suggested_rewrite = Column(Text, nullable=True)  # Suggested safer rewrite from LLM
+    final_message = Column(Text, nullable=True)  # Final message sent by user
     primary_risk_factors = Column(Text, nullable=True)  # JSON array from Output_2 Primary_Risk_Factors
-    pii_sensitivity_level = Column(String, nullable=True)
-    pii_sensitivity_explanation = Column(Text, nullable=True)
-    contextual_necessity_level = Column(String, nullable=True)
-    contextual_necessity_explanation = Column(Text, nullable=True)
-    intent_trajectory_level = Column(String, nullable=True)
-    intent_trajectory_explanation = Column(Text, nullable=True)
+    linkability_risk_level = Column(String, nullable=True)
+    linkability_risk_explanation = Column(Text, nullable=True)
+    authentication_baiting_level = Column(String, nullable=True)
+    authentication_baiting_explanation = Column(Text, nullable=True)
+    contextual_alignment_level = Column(String, nullable=True)
+    contextual_alignment_explanation = Column(Text, nullable=True)
+    platform_trust_obligation_level = Column(String, nullable=True)
+    platform_trust_obligation_explanation = Column(Text, nullable=True)
     psychological_pressure_level = Column(String, nullable=True)
     psychological_pressure_explanation = Column(Text, nullable=True)
-    identity_trust_signals_flags = Column(Text, nullable=True)  # JSON array from Output_1 Identity_Trust_Signals Flags
-    identity_trust_signals_explanation = Column(Text, nullable=True)
-    final_message = Column(Text, nullable=True)  # Final message sent by user
     accepted_rewrite = Column(Boolean, nullable=True)  # Whether user accepted the rewrite
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)

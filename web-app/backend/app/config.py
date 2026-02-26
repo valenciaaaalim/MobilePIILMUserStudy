@@ -58,6 +58,9 @@ class Settings:
         or "gemini-3-flash-preview"
     )
     GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "30"))
+    GEMINI_MAX_ATTEMPTS: int = int(os.getenv("GEMINI_MAX_ATTEMPTS", "3"))
+    GEMINI_LIVE_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_LIVE_TIMEOUT_SECONDS", "8"))
+    GEMINI_LIVE_MAX_ATTEMPTS: int = int(os.getenv("GEMINI_LIVE_MAX_ATTEMPTS", "1"))
     GEMINI_THINKING_LEVEL: str = (_clean_env(os.getenv("GEMINI_THINKING_LEVEL")) or "low").lower()
     GEMINI_INCLUDE_THOUGHTS: bool = _env_bool("GEMINI_INCLUDE_THOUGHTS", True)
     
@@ -68,12 +71,6 @@ class Settings:
     SESSION_COOKIE_SECURE: bool = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
     SESSION_COOKIE_HTTPONLY: bool = True
     SESSION_COOKIE_SAMESITE: str = "lax"
-    
-    # XML Extractor service
-    XML_EXTRACTOR_URL: str = os.getenv(
-        "XML_EXTRACTOR_URL",
-        "http://xml-extractor:8080"
-    )
     
     # Server settings
     HOST: str = os.getenv("HOST", "0.0.0.0")

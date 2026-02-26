@@ -1,0 +1,39 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Combination of full name, birth date, and address enables identity theft."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Official background checks should use secure portals, not informal chat messages."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Sender is moving quickly from a greeting to requesting sensitive data."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "The 'regulatory compliance' framing creates a sense of obligation and legitimacy."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "Unverified Recruiter",
+        "Out-of-Band Data Request"
+      ],
+      "Explanation": "The sender's identity is unconfirmed and their request bypasses secure channels."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], 15 june, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Direct disclosure of high-impact PII",
+      "Potential social engineering (Recruitment Fraud)",
+      "Insecure data transmission channel"
+    ],
+    "Explanation_NIST": "The message contains a combination of Direct Identifiers (Full Name) and Quasi-identifiers (DOB, Street Address) as defined by NIST SP 800-122. This 'PII cluster' significantly increases the risk of individual identification and harm. The context shows a 'foot-in-the-door' technique where a purported recruiter uses the guise of 'regulatory compliance' to extract sensitive data via an unencrypted chat interface rather than an official, secure HR portal.",
+    "Reasoning": "Sharing your full name, birth date, and home address in a chat is very risky. Real companies use secure websites for background checks rather than asking for this in a message.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to provide sensitive background check information through your company's official secure portal or a formal HR link."
+  }
+}

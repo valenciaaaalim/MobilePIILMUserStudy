@@ -43,7 +43,15 @@ def _ensure_participant_views() -> None:
     """
     view_defs = {
         "v_baseline_assessment": """
-            SELECT ba.*, p.prolific_id AS participant_prolific_id, p.variant AS participant_variant
+            SELECT
+                ba.id,
+                ba.participant_id,
+                ba.recognize_sensitive,
+                ba.avoid_accidental,
+                ba.familiar_scams,
+                ba.contextual_judgment,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
             FROM baseline_assessment ba
             JOIN participants p ON p.id = ba.participant_id
         """,
@@ -54,47 +62,88 @@ def _ensure_participant_views() -> None:
                 sr.scenario_number,
                 sr.original_input,
                 sr.masked_text,
-                sr.suggested_rewrite,
-                sr."Reasoning",
-                sr."Explanation_NIST",
                 sr.risk_level,
+                sr."Reasoning",
+                sr.suggested_rewrite,
+                sr.final_message,
                 sr.primary_risk_factors,
-                sr.pii_sensitivity_level,
-                sr.pii_sensitivity_explanation,
-                sr.contextual_necessity_level,
-                sr.contextual_necessity_explanation,
-                sr.intent_trajectory_level,
-                sr.intent_trajectory_explanation,
+                sr.linkability_risk_level,
+                sr.linkability_risk_explanation,
+                sr.authentication_baiting_level,
+                sr.authentication_baiting_explanation,
+                sr.contextual_alignment_level,
+                sr.contextual_alignment_explanation,
+                sr.platform_trust_obligation_level,
+                sr.platform_trust_obligation_explanation,
                 sr.psychological_pressure_level,
                 sr.psychological_pressure_explanation,
-                sr.identity_trust_signals_flags,
-                sr.identity_trust_signals_explanation,
-                sr.final_message,
                 sr.accepted_rewrite,
                 sr.completed_at,
-                sr.created_at,
                 p.prolific_id AS participant_prolific_id,
                 p.variant AS participant_variant
             FROM scenario_responses sr
             JOIN participants p ON p.id = sr.participant_id
         """,
         "v_post_scenario_survey": """
-            SELECT pss.*, p.prolific_id AS participant_prolific_id, p.variant AS participant_variant
+            SELECT
+                pss.id,
+                pss.participant_id,
+                pss.scenario_number,
+                pss.confidence_judgment,
+                pss.uncertainty_sharing,
+                pss.perceived_risk,
+                pss.warning_clarity,
+                pss.warning_helpful,
+                pss.rewrite_quality,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
             FROM post_scenario_survey pss
             JOIN participants p ON p.id = pss.participant_id
         """,
         "v_pii_disclosure": """
-            SELECT pd.*, p.prolific_id AS participant_prolific_id, p.variant AS participant_variant
+            SELECT
+                pd.id,
+                pd.participant_id,
+                pd.scenario_number,
+                pd.pii_type,
+                pd.other_specified,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
             FROM pii_disclosure pd
             JOIN participants p ON p.id = pd.participant_id
         """,
         "v_sus_responses": """
-            SELECT sus.*, p.prolific_id AS participant_prolific_id, p.variant AS participant_variant
+            SELECT
+                sus.id,
+                sus.participant_id,
+                sus.sus_1,
+                sus.sus_2,
+                sus.sus_3,
+                sus.sus_4,
+                sus.sus_5,
+                sus.sus_6,
+                sus.sus_7,
+                sus.sus_8,
+                sus.sus_9,
+                sus.sus_10,
+                sus.sus_score,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
             FROM sus_responses sus
             JOIN participants p ON p.id = sus.participant_id
         """,
         "v_end_of_study_survey": """
-            SELECT eos.*, p.prolific_id AS participant_prolific_id, p.variant AS participant_variant
+            SELECT
+                eos.id,
+                eos.participant_id,
+                eos.tasks_realistic,
+                eos.realism_explanation,
+                eos.overall_confidence,
+                eos.sharing_rationale,
+                eos.trust_system,
+                eos.trust_explanation,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
             FROM end_of_study_survey eos
             JOIN participants p ON p.id = eos.participant_id
         """,
@@ -112,6 +161,30 @@ def _sqlite_column_names(table_name: str) -> set[str]:
     return {row[1] for row in info_rows}
 
 
+def _sqlite_column_order(table_name: str) -> list[str]:
+    """Return SQLite column names in table order."""
+    with engine.begin() as conn:
+        info_rows = conn.execute(text(f"PRAGMA table_info('{table_name}')")).fetchall()
+    return [row[1] for row in info_rows]
+
+
+def _scenario_layout_requires_rebuild(columns_in_order: list[str]) -> bool:
+    """
+    Ensure key scenario fields follow the required order:
+    ... masked_text, risk_level, Reasoning, suggested_rewrite, final_message ...
+    """
+    required_sequence = ["masked_text", "risk_level", "Reasoning", "suggested_rewrite", "final_message"]
+    positions = []
+    for col in required_sequence:
+        if col not in columns_in_order:
+            return True
+        positions.append(columns_in_order.index(col))
+    if positions != sorted(positions):
+        return True
+    start = positions[0]
+    return positions != list(range(start, start + len(required_sequence)))
+
+
 def _backfill_scenario_response_columns() -> None:
     """Copy legacy scenario columns into renamed columns when present."""
     columns = _sqlite_column_names("scenario_responses")
@@ -122,17 +195,47 @@ def _backfill_scenario_response_columns() -> None:
                 "SET original_input = user_input "
                 "WHERE original_input IS NULL AND user_input IS NOT NULL"
             ))
-        if "Explanation_NIST" in columns and "risk_explanation" in columns:
-            conn.execute(text(
-                "UPDATE scenario_responses "
-                "SET \"Explanation_NIST\" = risk_explanation "
-                "WHERE \"Explanation_NIST\" IS NULL AND risk_explanation IS NOT NULL"
-            ))
         if "Reasoning" in columns and "reasoning_steps" in columns:
             conn.execute(text(
                 "UPDATE scenario_responses "
                 "SET \"Reasoning\" = reasoning_steps "
                 "WHERE \"Reasoning\" IS NULL AND reasoning_steps IS NOT NULL"
+            ))
+        if "linkability_risk_level" in columns and "pii_sensitivity_level" in columns:
+            conn.execute(text(
+                "UPDATE scenario_responses "
+                "SET linkability_risk_level = pii_sensitivity_level "
+                "WHERE linkability_risk_level IS NULL AND pii_sensitivity_level IS NOT NULL"
+            ))
+        if "linkability_risk_explanation" in columns and "pii_sensitivity_explanation" in columns:
+            conn.execute(text(
+                "UPDATE scenario_responses "
+                "SET linkability_risk_explanation = pii_sensitivity_explanation "
+                "WHERE linkability_risk_explanation IS NULL AND pii_sensitivity_explanation IS NOT NULL"
+            ))
+        if "contextual_alignment_level" in columns and "contextual_necessity_level" in columns:
+            conn.execute(text(
+                "UPDATE scenario_responses "
+                "SET contextual_alignment_level = contextual_necessity_level "
+                "WHERE contextual_alignment_level IS NULL AND contextual_necessity_level IS NOT NULL"
+            ))
+        if "contextual_alignment_explanation" in columns and "contextual_necessity_explanation" in columns:
+            conn.execute(text(
+                "UPDATE scenario_responses "
+                "SET contextual_alignment_explanation = contextual_necessity_explanation "
+                "WHERE contextual_alignment_explanation IS NULL AND contextual_necessity_explanation IS NOT NULL"
+            ))
+        if "platform_trust_obligation_level" in columns and "intent_trajectory_level" in columns:
+            conn.execute(text(
+                "UPDATE scenario_responses "
+                "SET platform_trust_obligation_level = intent_trajectory_level "
+                "WHERE platform_trust_obligation_level IS NULL AND intent_trajectory_level IS NOT NULL"
+            ))
+        if "platform_trust_obligation_explanation" in columns and "intent_trajectory_explanation" in columns:
+            conn.execute(text(
+                "UPDATE scenario_responses "
+                "SET platform_trust_obligation_explanation = intent_trajectory_explanation "
+                "WHERE platform_trust_obligation_explanation IS NULL AND intent_trajectory_explanation IS NOT NULL"
             ))
 
 
@@ -166,21 +269,60 @@ def _backfill_scenario_completed_at_from_participant() -> None:
 
 
 def _rebuild_scenario_responses_if_legacy() -> None:
-    """Drop legacy columns by rebuilding scenario_responses with the canonical schema."""
+    """Drop deprecated columns by rebuilding scenario_responses with the canonical schema."""
     columns = _sqlite_column_names("scenario_responses")
-    legacy_columns = {"user_input", "rewrite", "risk_explanation", "reasoning_steps"}
-    if not (columns & legacy_columns):
+    column_order = _sqlite_column_order("scenario_responses")
+    deprecated_columns = {
+        "user_input",
+        "rewrite",
+        "risk_explanation",
+        "reasoning_steps",
+        "Explanation_NIST",
+        "pii_sensitivity_level",
+        "pii_sensitivity_explanation",
+        "contextual_necessity_level",
+        "contextual_necessity_explanation",
+        "intent_trajectory_level",
+        "intent_trajectory_explanation",
+        "identity_trust_signals_flags",
+        "identity_trust_signals_explanation",
+    }
+    needs_order_rebuild = _scenario_layout_requires_rebuild(column_order)
+    if not (columns & deprecated_columns) and not needs_order_rebuild:
         return
 
     # Ensure all referenced columns exist before the data-copy SELECT.
-    for col in ["original_input", "Reasoning", "Explanation_NIST"]:
+    for col in [
+        "original_input",
+        "Reasoning",
+        "linkability_risk_level",
+        "linkability_risk_explanation",
+        "authentication_baiting_level",
+        "authentication_baiting_explanation",
+        "contextual_alignment_level",
+        "contextual_alignment_explanation",
+        "platform_trust_obligation_level",
+        "platform_trust_obligation_explanation",
+        "psychological_pressure_level",
+        "psychological_pressure_explanation",
+        "pii_sensitivity_level",
+        "pii_sensitivity_explanation",
+        "contextual_necessity_level",
+        "contextual_necessity_explanation",
+        "intent_trajectory_level",
+        "intent_trajectory_explanation",
+    ]:
         if col not in columns:
             _ensure_sqlite_column("scenario_responses", col, "TEXT")
-    for col in legacy_columns:
+    for col in deprecated_columns:
         if col not in columns:
             _ensure_sqlite_column("scenario_responses", col, "TEXT")
 
-    logger.info("Rebuilding scenario_responses to remove legacy columns: %s", sorted(columns & legacy_columns))
+    logger.info(
+        "Rebuilding scenario_responses (drop deprecated=%s, fix_order=%s)",
+        sorted(columns & deprecated_columns),
+        needs_order_rebuild,
+    )
     with engine.begin() as conn:
         # The old view depends on scenario_responses and blocks table swap in SQLite.
         conn.execute(text("DROP VIEW IF EXISTS v_scenario_responses"))
@@ -192,22 +334,21 @@ def _rebuild_scenario_responses_if_legacy() -> None:
                 scenario_number INTEGER NOT NULL,
                 original_input TEXT NULL,
                 masked_text TEXT NULL,
-                suggested_rewrite TEXT NULL,
-                "Reasoning" TEXT NULL,
-                "Explanation_NIST" TEXT NULL,
                 risk_level VARCHAR NULL,
+                "Reasoning" TEXT NULL,
+                suggested_rewrite TEXT NULL,
+                final_message TEXT NULL,
                 primary_risk_factors TEXT NULL,
-                pii_sensitivity_level VARCHAR NULL,
-                pii_sensitivity_explanation TEXT NULL,
-                contextual_necessity_level VARCHAR NULL,
-                contextual_necessity_explanation TEXT NULL,
-                intent_trajectory_level VARCHAR NULL,
-                intent_trajectory_explanation TEXT NULL,
+                linkability_risk_level VARCHAR NULL,
+                linkability_risk_explanation TEXT NULL,
+                authentication_baiting_level VARCHAR NULL,
+                authentication_baiting_explanation TEXT NULL,
+                contextual_alignment_level VARCHAR NULL,
+                contextual_alignment_explanation TEXT NULL,
+                platform_trust_obligation_level VARCHAR NULL,
+                platform_trust_obligation_explanation TEXT NULL,
                 psychological_pressure_level VARCHAR NULL,
                 psychological_pressure_explanation TEXT NULL,
-                identity_trust_signals_flags TEXT NULL,
-                identity_trust_signals_explanation TEXT NULL,
-                final_message TEXT NULL,
                 accepted_rewrite BOOLEAN NULL,
                 started_at DATETIME NULL,
                 completed_at DATETIME NULL,
@@ -217,13 +358,14 @@ def _rebuild_scenario_responses_if_legacy() -> None:
         """))
         conn.execute(text("""
             INSERT INTO scenario_responses_new (
-                id, participant_id, scenario_number, original_input, masked_text, suggested_rewrite,
-                "Reasoning", "Explanation_NIST", risk_level, primary_risk_factors,
-                pii_sensitivity_level, pii_sensitivity_explanation, contextual_necessity_level,
-                contextual_necessity_explanation, intent_trajectory_level, intent_trajectory_explanation,
+                id, participant_id, scenario_number, original_input, masked_text, risk_level,
+                "Reasoning", suggested_rewrite, final_message, primary_risk_factors,
+                linkability_risk_level, linkability_risk_explanation,
+                authentication_baiting_level, authentication_baiting_explanation,
+                contextual_alignment_level, contextual_alignment_explanation,
+                platform_trust_obligation_level, platform_trust_obligation_explanation,
                 psychological_pressure_level, psychological_pressure_explanation,
-                identity_trust_signals_flags, identity_trust_signals_explanation,
-                final_message, accepted_rewrite, started_at, completed_at, created_at
+                accepted_rewrite, started_at, completed_at, created_at
             )
             SELECT
                 id,
@@ -231,22 +373,21 @@ def _rebuild_scenario_responses_if_legacy() -> None:
                 scenario_number,
                 COALESCE(original_input, user_input),
                 masked_text,
-                COALESCE(suggested_rewrite, rewrite),
-                COALESCE("Reasoning", reasoning_steps),
-                COALESCE("Explanation_NIST", risk_explanation),
                 risk_level,
+                COALESCE("Reasoning", reasoning_steps),
+                COALESCE(suggested_rewrite, rewrite),
+                final_message,
                 primary_risk_factors,
-                pii_sensitivity_level,
-                pii_sensitivity_explanation,
-                contextual_necessity_level,
-                contextual_necessity_explanation,
-                intent_trajectory_level,
-                intent_trajectory_explanation,
+                COALESCE(linkability_risk_level, pii_sensitivity_level),
+                COALESCE(linkability_risk_explanation, pii_sensitivity_explanation),
+                authentication_baiting_level,
+                authentication_baiting_explanation,
+                COALESCE(contextual_alignment_level, contextual_necessity_level),
+                COALESCE(contextual_alignment_explanation, contextual_necessity_explanation),
+                COALESCE(platform_trust_obligation_level, intent_trajectory_level),
+                COALESCE(platform_trust_obligation_explanation, intent_trajectory_explanation),
                 psychological_pressure_level,
                 psychological_pressure_explanation,
-                identity_trust_signals_flags,
-                identity_trust_signals_explanation,
-                final_message,
                 accepted_rewrite,
                 started_at,
                 completed_at,
@@ -287,19 +428,18 @@ def init_db():
         scenario_columns = [
             ("original_input", "TEXT"),
             ("Reasoning", "TEXT"),
-            ("Explanation_NIST", "TEXT"),
             ("risk_level", "TEXT"),
             ("primary_risk_factors", "TEXT"),
-            ("pii_sensitivity_level", "TEXT"),
-            ("pii_sensitivity_explanation", "TEXT"),
-            ("contextual_necessity_level", "TEXT"),
-            ("contextual_necessity_explanation", "TEXT"),
-            ("intent_trajectory_level", "TEXT"),
-            ("intent_trajectory_explanation", "TEXT"),
+            ("linkability_risk_level", "TEXT"),
+            ("linkability_risk_explanation", "TEXT"),
+            ("authentication_baiting_level", "TEXT"),
+            ("authentication_baiting_explanation", "TEXT"),
+            ("contextual_alignment_level", "TEXT"),
+            ("contextual_alignment_explanation", "TEXT"),
+            ("platform_trust_obligation_level", "TEXT"),
+            ("platform_trust_obligation_explanation", "TEXT"),
             ("psychological_pressure_level", "TEXT"),
             ("psychological_pressure_explanation", "TEXT"),
-            ("identity_trust_signals_flags", "TEXT"),
-            ("identity_trust_signals_explanation", "TEXT"),
         ]
         for column_name, column_type in scenario_columns:
             _ensure_sqlite_column("scenario_responses", column_name, column_type)

@@ -1,15 +1,18 @@
 """
 Risk assessment routes.
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 import logging
 import sys
 import os
 import json
+import threading
+from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 from app.services.gemini_service import GeminiService
 from app.services.risk_assessment import RiskAssessmentService
+from app.config import settings
 
 # Import gliner_service from backend directory
 # The file is at web-app/backend/gliner_service.py
@@ -26,6 +29,90 @@ router = APIRouter(prefix="/api", tags=["risk"])
 
 _gliner_service: Optional[GliNERService] = None
 _annotated_conversations: Optional[Dict[int, List[Dict[str, Any]]]] = None
+
+
+@dataclass
+class _SingleFlightState:
+    condition: threading.Condition = field(default_factory=threading.Condition)
+    active: bool = False
+    latest_payload: Optional[Dict[str, Any]] = None
+    latest_version: int = 0
+    completed_version: int = 0
+    completed_result: Optional[Dict[str, Any]] = None
+    completed_error: Optional[Exception] = None
+
+
+class _SingleFlightCoordinator:
+    """Coalesce overlapping requests and process only the latest payload per key."""
+
+    def __init__(self):
+        self._states: Dict[str, _SingleFlightState] = {}
+        self._states_lock = threading.Lock()
+
+    def _get_state(self, key: str) -> _SingleFlightState:
+        with self._states_lock:
+            state = self._states.get(key)
+            if state is None:
+                state = _SingleFlightState()
+                self._states[key] = state
+            return state
+
+    def submit(self, key: str, payload: Dict[str, Any], processor) -> Dict[str, Any]:
+        state = self._get_state(key)
+        with state.condition:
+            state.latest_version += 1
+            my_version = state.latest_version
+            state.latest_payload = dict(payload)
+
+            if not state.active:
+                state.active = True
+                threading.Thread(
+                    target=self._worker,
+                    args=(key, processor),
+                    daemon=True,
+                ).start()
+            else:
+                logger.info("[RISK] Coalescing overlapping request (key=%s, version=%d)", key, my_version)
+            state.condition.notify_all()
+
+            while state.completed_version < my_version:
+                state.condition.wait()
+
+            if state.completed_error is not None:
+                raise state.completed_error
+            return state.completed_result or {}
+
+    def _worker(self, key: str, processor) -> None:
+        state = self._get_state(key)
+        while True:
+            with state.condition:
+                payload = state.latest_payload
+                version = state.latest_version
+                state.latest_payload = None
+
+            if payload is None:
+                with state.condition:
+                    if state.latest_payload is not None:
+                        continue
+                    state.active = False
+                    state.condition.notify_all()
+                return
+
+            try:
+                result = processor(payload)
+                error: Optional[Exception] = None
+            except Exception as exc:
+                result = None
+                error = exc
+
+            with state.condition:
+                state.completed_result = result
+                state.completed_error = error
+                state.completed_version = version
+                state.condition.notify_all()
+
+
+_single_flight = _SingleFlightCoordinator()
 
 
 def get_gliner_service() -> GliNERService:
@@ -121,9 +208,16 @@ def get_conversation_history_from_json(conversation_id: int) -> List[Dict[str, A
     return conversations.get(conversation_id, [])
 
 
-def get_risk_assessment_service() -> RiskAssessmentService:
-    """Dependency to get risk assessment service."""
-    return RiskAssessmentService(GeminiService())
+def _build_risk_service(live_typing: bool) -> RiskAssessmentService:
+    """Build risk service with timeout/retry policy based on request type."""
+    timeout_seconds = settings.GEMINI_TIMEOUT_SECONDS
+    max_attempts = settings.GEMINI_MAX_ATTEMPTS
+    if live_typing:
+        timeout_seconds = settings.GEMINI_LIVE_TIMEOUT_SECONDS
+        max_attempts = settings.GEMINI_LIVE_MAX_ATTEMPTS
+
+    llm = GeminiService(timeout_seconds=timeout_seconds, max_attempts=max_attempts)
+    return RiskAssessmentService(llm)
 
 
 def load_seed_conversations_with_metadata() -> List[Dict[str, Any]]:
@@ -197,20 +291,28 @@ def reload_conversations():
     return {"status": "reloaded", "count": len(result)}
 
 
-@router.post("/risk/assess")
-def assess_risk(
-    request: dict,
-    risk_service: RiskAssessmentService = Depends(get_risk_assessment_service)
-):
-    """Assess risk of a draft message."""
+def _single_flight_key(payload: Dict[str, Any]) -> str:
+    participant = str(payload.get("participant_prolific_id") or "anonymous")
+    session_id = payload.get("session_id", 1)
+    return f"{participant}:{session_id}"
+
+
+def _process_risk_assessment_payload(request: Dict[str, Any]) -> Dict[str, Any]:
+    """Assess risk payload. Used by single-flight worker."""
     draft_text = request.get("draft_text", "")
     masked_text_input = request.get("masked_text")
     masked_history_input = request.get("masked_history")
     session_id = request.get("session_id", 1)  # Scenario number (1, 2, or 3)
     participant_prolific_id = request.get("participant_prolific_id")
+    live_typing = bool(request.get("live_typing"))
+    risk_service = _build_risk_service(live_typing=live_typing)
     
-    logger.info("[RISK] assess_risk endpoint called with session_id=%s, draft_len=%d", 
-                session_id, len(draft_text))
+    logger.info(
+        "[RISK] Processing assessment (session_id=%s, draft_len=%d, live_typing=%s)",
+        session_id,
+        len(draft_text),
+        live_typing,
+    )
     
     # Map session_id to conversation_id (1000, 1001, 1002)
     conversation_id = 999 + session_id if session_id <= 3 else 1000
@@ -242,31 +344,22 @@ def assess_risk(
         logger.info("[RISK] No PII detected, returning LOW risk without LLM call")
         return {
             "risk_level": "LOW",
-            "Explanation_NIST": "No PII detected; skipping LLM assessment.",
             "safer_rewrite": draft_text,
             "show_warning": False,
             "primary_risk_factors": [],
-            "Reasoning": "",
-            "Thought_Summary": "",
-            # Backward-compatible keys
-            "explanation": "No PII detected; skipping LLM assessment.",
-            "reasoning_steps": "",
+            "reasoning": "",
             "output_1": {
-                "pii_sensitivity": {"level": "", "explanation": ""},
-                "contextual_necessity": {"level": "", "explanation": ""},
-                "intent_trajectory": {"level": "", "explanation": ""},
+                "linkability_risk": {"level": "", "explanation": ""},
+                "authentication_baiting": {"level": "", "explanation": ""},
+                "contextual_alignment": {"level": "", "explanation": ""},
+                "platform_trust_obligation": {"level": "", "explanation": ""},
                 "psychological_pressure": {"level": "", "explanation": ""},
-                "identity_trust_signals": {"flags": [], "explanation": ""}
             },
             "output_2": {
                 "original_user_message": draft_text,
                 "risk_level": "LOW",
                 "primary_risk_factors": [],
-                "Explanation_NIST": "No PII detected; skipping LLM assessment.",
-                "Reasoning": "",
-                # Backward-compatible keys
-                "explanation": "No PII detected; skipping LLM assessment.",
-                "reasoning_steps": "",
+                "reasoning": "",
                 "rewrite": draft_text
             }
         }
@@ -297,15 +390,22 @@ def assess_risk(
     
     return {
         "risk_level": result["risk_level"],
-        "Explanation_NIST": result["explanation"],
         "safer_rewrite": result["safer_rewrite"],
         "show_warning": result["show_warning"],
         "primary_risk_factors": result.get("primary_risk_factors", []),
-        "Reasoning": result.get("reasoning_steps", ""),
-        "Thought_Summary": result.get("thought_summary", ""),
-        # Backward-compatible keys
-        "explanation": result["explanation"],
-        "reasoning_steps": result.get("reasoning_steps", ""),
+        "reasoning": result.get("reasoning", ""),
         "output_1": result.get("output_1", {}),
         "output_2": result.get("output_2", {})
     }
+
+
+@router.post("/risk/assess")
+def assess_risk(request: dict):
+    """Assess risk of a draft message with per-session single-flight coalescing."""
+    key = _single_flight_key(request)
+    logger.info(
+        "[RISK] assess_risk endpoint called (key=%s, draft_len=%d)",
+        key,
+        len(request.get("draft_text", "")),
+    )
+    return _single_flight.submit(key, request, _process_risk_assessment_payload)

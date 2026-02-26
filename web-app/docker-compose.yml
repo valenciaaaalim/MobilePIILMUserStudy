@@ -9,17 +9,15 @@ services:
     environment:
       - DATABASE_URL=sqlite:///./data/web_app.db  # Changed to match volume mount
       - GEMINI_MODEL_NAME=${GEMINI_MODEL_NAME}
+      - GEMINI_LIVE_TIMEOUT_SECONDS=${GEMINI_LIVE_TIMEOUT_SECONDS:-8}
+      - GEMINI_LIVE_MAX_ATTEMPTS=${GEMINI_LIVE_MAX_ATTEMPTS:-1}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - FRONTEND_URL=http://localhost:3000
-      - XML_EXTRACTOR_URL=http://xml-extractor:8080
       - SESSION_COOKIE_SECURE=false
     volumes:
       - ./backend/data:/app/data  # For SQLite database persistence
       - ./backend/app/assets/annotated_test.json:/app/app/assets/annotated_test.json:ro  # Mount the JSON file for seeding (read-only)
-    depends_on:
-      xml-extractor:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
@@ -39,20 +37,6 @@ services:
     depends_on:
       web-app-backend:
         condition: service_healthy
-
-  xml-extractor:
-    build:
-      context: ./xml-extractor
-      dockerfile: Dockerfile
-    container_name: xml-extractor
-    ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 networks:
   default:

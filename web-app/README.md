@@ -6,9 +6,8 @@ This is a web application for user testing of the WhatsApp risk assessment syste
 
 - **Backend**: FastAPI (Python) with SQLite/PostgreSQL database
 - **Frontend**: React with React Router
-- **Services**: 
+- **Services**:
   - Gemini API integration for risk assessment
-  - XML Extractor service (stubbed for now)
 - **Deployment**: Docker containers, Google Cloud Run, Cloudflare
 
 ## Local Development
@@ -43,6 +42,8 @@ This is a web application for user testing of the WhatsApp risk assessment syste
    GEMINI_API_KEY=your_gemini_api_key_here
    GEMINI_MODEL_NAME=gemini-3-flash-preview
    GEMINI_TIMEOUT_SECONDS=30
+   GEMINI_LIVE_TIMEOUT_SECONDS=8
+   GEMINI_LIVE_MAX_ATTEMPTS=1
    DATABASE_URL=sqlite:///./web_app.db
    FRONTEND_URL=http://localhost:3000
    ```
@@ -101,6 +102,8 @@ The frontend will be available at `http://localhost:3000`.
    GEMINI_API_KEY=your_gemini_api_key_here
    GEMINI_MODEL_NAME=gemini-3-flash-preview
    GEMINI_TIMEOUT_SECONDS=30
+   GEMINI_LIVE_TIMEOUT_SECONDS=8
+   GEMINI_LIVE_MAX_ATTEMPTS=1
    ```
 
 3. **Start services in detached mode (runs in background):**
@@ -248,7 +251,6 @@ web-app/
 │   │   ├── components/  # React components
 │   │   └── App.js       # Main app
 │   └── package.json
-├── xml-extractor/       # XML extractor stub service
 ├── docker-compose.yml   # Multi-service setup
 ├── README.md           # This file
 └── DEPLOYMENT.md       # Deployment guide

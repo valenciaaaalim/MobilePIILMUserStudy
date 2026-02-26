@@ -149,13 +149,11 @@ This document summarizes the conversion of the native Android app to a web appli
 
 ### Infrastructure
 - `web-app/docker-compose.yml` - Multi-service setup
-- `web-app/xml-extractor/` - Stub XML extractor service
 - `web-app/README.md` - Developer guide
 - `web-app/DEPLOYMENT.md` - Deployment instructions
 
 ## Notes
 
-- The XML extractor service is currently a stub and returns placeholder XML
 - Conversation direction logic determines SENT vs RECEIVED based on which participant name appears first
 - Risk assessment currently uses unmasked text (GLiNER integration pending)
 - Frontend is designed to run separately from backend (different ports, CORS enabled)

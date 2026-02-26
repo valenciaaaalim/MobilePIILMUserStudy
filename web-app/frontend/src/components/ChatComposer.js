@@ -1,22 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import React, { useEffect, useRef } from 'react';
 import './ChatComposer.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const INPUT_LINE_HEIGHT_PX = 20;
 const INPUT_VERTICAL_PADDING_PX = 16;
 const INPUT_MIN_HEIGHT_PX = INPUT_LINE_HEIGHT_PX + INPUT_VERTICAL_PADDING_PX;
 const INPUT_MAX_LINES = 5;
 const INPUT_MAX_HEIGHT_PX = (INPUT_LINE_HEIGHT_PX * INPUT_MAX_LINES) + INPUT_VERTICAL_PADDING_PX;
 
-function ChatComposer({ draftText, onTextChange, onSend, variant, onPiiDetected, onPiiClick, isSending }) {
-  const [piiSpans, setPiiSpans] = useState([]);
-  const debounceTimeoutRef = useRef(null);
-  const requestCounterRef = useRef(0);
+function ChatComposer({ draftText, onTextChange, onSend, variant, piiSpans = [], onPiiClick, isSending }) {
   const textareaRef = useRef(null);
   const overlayRef = useRef(null);
   const piiBubbleRef = useRef(null);
-  const detectAbortRef = useRef(null);
 
   const triggerPiiBubblePulse = () => {
     const bubble = piiBubbleRef.current;
@@ -75,93 +69,6 @@ function ChatComposer({ draftText, onTextChange, onSend, variant, onPiiDetected,
       triggerPiiBubblePulse();
     }
   };
-
-  // PII detection for Group A only
-  useEffect(() => {
-    // Only enable PII detection for Group A
-    if (variant !== 'A') {
-      if (detectAbortRef.current) {
-        detectAbortRef.current.abort();
-        detectAbortRef.current = null;
-      }
-      setPiiSpans([]);
-      return;
-    }
-
-    // Clear previous timeout
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    // If text is empty, clear PII spans
-    if (!draftText.trim()) {
-      if (detectAbortRef.current) {
-        detectAbortRef.current.abort();
-        detectAbortRef.current = null;
-      }
-      setPiiSpans([]);
-      return;
-    }
-
-    // Debounce PII detection (800ms as per requirements)
-    debounceTimeoutRef.current = setTimeout(() => {
-      const currentRequest = ++requestCounterRef.current;
-      console.log('[PII] debounce fired', { length: draftText.length, request: currentRequest });
-
-      if (detectAbortRef.current) {
-        detectAbortRef.current.abort();
-      }
-      const controller = new AbortController();
-      detectAbortRef.current = controller;
-      
-      axios.post(
-        `${API_BASE_URL}/pii/detect`,
-        { draft_text: draftText },
-        { timeout: 30000, signal: controller.signal }
-      )
-      .then(response => {
-        // Ignore stale responses
-        if (currentRequest === requestCounterRef.current) {
-          console.log('[PII] detect success', {
-            request: currentRequest,
-            spans: response.data?.pii_spans?.length || 0
-          });
-          const spans = response.data.pii_spans || [];
-          const masked = response.data.masked_text || '';
-          setPiiSpans(spans);
-          // Notify parent component of PII detection results
-          if (onPiiDetected) {
-            onPiiDetected({
-              piiSpans: spans,
-              maskedText: masked,
-              hasPii: spans.length > 0,
-              sourceText: draftText
-            });
-          }
-        }
-      })
-      .catch(error => {
-        if (error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError' || error?.name === 'AbortError') {
-          return;
-        }
-        console.error('[PII] detect error', error);
-        // Ignore stale responses
-        if (currentRequest === requestCounterRef.current) {
-          setPiiSpans([]);
-        }
-      });
-    }, 800); // 1500ms debounce as per requirements
-
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-      if (detectAbortRef.current) {
-        detectAbortRef.current.abort();
-        detectAbortRef.current = null;
-      }
-    };
-  }, [draftText, variant]);
 
   // Sync scroll between textarea and overlay
   const handleScroll = () => {

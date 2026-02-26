@@ -1,0 +1,40 @@
+{
+  "Output_1": {
+    "PII_Sensitivity": {
+      "Level": "HIGH",
+      "Explanation": "Contains full name, exact birth date, and a specific residential address."
+    },
+    "Contextual_Necessity": {
+      "Level": "LOW",
+      "Explanation": "Sensitive identifiers are rarely required directly within an informal chat interface."
+    },
+    "Intent_Trajectory": {
+      "Level": "HIGH",
+      "Explanation": "Sender is steering conversation toward collecting high-value data for identity theft."
+    },
+    "Psychological_Pressure": {
+      "Level": "MEDIUM",
+      "Explanation": "Uses professional jargon like 'regulatory compliance' to justify the data request."
+    },
+    "Identity_Trust_Signals": {
+      "Flags": [
+        "UNVERIFIED_SENDER",
+        "INSECURE_CHANNEL",
+        "SOCIALLY_ENGINEERED_PRETEXT"
+      ],
+      "Explanation": "Recruiter's identity is unverified; requesting sensitive data via chat is unprofessional."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Identity Theft Vulnerability",
+      "Unsecured Data Transfer",
+      "Recruitment Phishing Pattern"
+    ],
+    "Explanation_NIST": "The user is disclosing a combination of Direct Identifiers (Full Name) and Quasi-Identifiers (Date of Birth, Physical Address) as categorized in NIST SP 800-122. This specific combination creates a high 'linkability' risk, potentially allowing an adversary to uniquely identify and impersonate the individual. The social engineering trigger here is 'Pretexting'\u2014the sender uses a fake professional requirement (compliance) to bypass the user's natural hesitation to share sensitive data over an unencrypted chat channel.",
+    "Reasoning": "Sharing your full name, birth date, and home address in a chat is very risky. This information could be used by someone to pretend to be you. It is much safer to ask for a secure website or a formal application link to provide these details.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my personal details over chat. Do you have a secure company portal or a formal application link where I can submit my information for the background check?"
+  }
+}

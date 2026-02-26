@@ -22,7 +22,11 @@ def _timestamp() -> str:
 class GeminiService:
     """Service for interacting with Gemini using generateContent REST API."""
 
-    def __init__(self):
+    def __init__(
+        self,
+        timeout_seconds: Optional[int] = None,
+        max_attempts: Optional[int] = None,
+    ):
         self.api_key = settings.GOOGLE_API_KEY or settings.GEMINI_API_KEY
         if not self.api_key:
             raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY environment variable is required")
@@ -30,7 +34,8 @@ class GeminiService:
             logger.info("Both GOOGLE_API_KEY and GEMINI_API_KEY are set; using GOOGLE_API_KEY.")
 
         self.model = settings.GEMINI_MODEL_NAME
-        self.timeout = settings.GEMINI_TIMEOUT_SECONDS
+        self.timeout = int(timeout_seconds if timeout_seconds is not None else settings.GEMINI_TIMEOUT_SECONDS)
+        self.max_attempts = max(1, int(max_attempts if max_attempts is not None else settings.GEMINI_MAX_ATTEMPTS))
         self.thinking_level = settings.GEMINI_THINKING_LEVEL
         self.include_thoughts = settings.GEMINI_INCLUDE_THOUGHTS
         self.base_url = "https://generativelanguage.googleapis.com"
@@ -162,7 +167,7 @@ class GeminiService:
         content_text = self._build_prompt_text(prompt, context)
         self._last_thought_summaries = []
 
-        max_attempts = 3
+        max_attempts = self.max_attempts
         for attempt in range(1, max_attempts + 1):
             try:
                 call_start = _timestamp()
