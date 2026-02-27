@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Phone numbers directly link to personal identity and private accounts."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Phone numbers are frequently used for two-factor authentication and account recovery."
+    },
+    "Contextual_Alignment": {
+      "Level": "Low",
+      "Explanation": "A phone number was not requested and the message contains gibberish."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "Medium",
+      "Explanation": "In-app messaging is safer than moving to unmonitored personal phone lines."
+    },
+    "Psychological_Pressure": {
+      "Level": "Low",
+      "Explanation": "No external pressure detected, but the user's input seems erratic."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "ewrgwiejnrgoweiugoweirnoweiurnofwenrfeinrofiwneorifnewornufowienrfonfnewrfnoewinrfoewnrfoewnrofiewnfrinfeinrfienfiefniefnienfiefneifneifneifnienfienfiennnnnnnnfwerfwerfwerferferferfererfefre my phone is [PHONE_NUMBER]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature sharing of contact information",
+      "High linkability of phone numbers",
+      "Incoherent communication style"
+    ],
+    "Reasoning": "Sharing a phone number at this early stage is risky, especially since the sender has not yet verified their own identity or the company's legitimacy. Additionally, the garbled text suggests accidental input or a lack of focus, making it a poor time to share sensitive contact details that could be used for off-platform phishing or bypassing security.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to keep our conversation here for now while we discuss the requirements."
+  }
+}

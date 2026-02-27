@@ -113,6 +113,8 @@
   width: 100%;
   box-sizing: border-box;
   overflow-y: hidden;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .send-button {

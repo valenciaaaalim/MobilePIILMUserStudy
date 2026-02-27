@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Full name, birth date, and address uniquely identify and locate the user."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birth dates and addresses are common answers for security verification questions."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are standard, but requested prematurely before a formal interview."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Standard messaging platforms lack the security required for sensitive background data."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "The sender uses 'regulatory compliance' to create a sense of necessity."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], june 15, 1986, [LOCATION_STREET], springfield,[LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature sharing of sensitive PII",
+      "Potential for identity theft",
+      "Lack of secure data transmission channel"
+    ],
+    "Reasoning": "Sharing a full name, exact date of birth, and home address in a chat window is extremely risky. While the sender claims to be a recruiter, there has been no formal interview or verification of their company's identity. These specific data points are often used to bypass security on personal accounts. A legitimate company would typically use a secure, encrypted HR portal for background checks rather than asking for this info in a casual conversation.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my full address and date of birth over chat. Do you have a secure company portal where I can submit my details for the background check?"
+  }
+}

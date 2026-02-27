@@ -1,0 +1,32 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "MODERATE",
+      "Explanation": "Estimated fallback because risk model output was unavailable."
+    },
+    "Authentication_Baiting": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate auth-baiting due temporary model unavailability."
+    },
+    "Contextual_Alignment": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate context due temporary model unavailability."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate platform trust due temporary model unavailability."
+    },
+    "Psychological_Pressure": {
+      "Level": "UNKNOWN",
+      "Explanation": "Could not evaluate pressure due temporary model unavailability."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: Kimberly Miller, June 15, 1986, 42 Maple Street, springfield, IL.",
+    "Risk_Level": "MODERATE",
+    "Primary_Risk_Factors": [],
+    "Reasoning": "Sensitive details were detected, so this rewrite keeps your intent while sharing less.",
+    "Rewrite": "I\u2019m not comfortable sharing my exact location right now."
+  },
+  "error": "HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Read timed out. (read timeout=8)"
+}

@@ -30,39 +30,38 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
   const [maskedHistory, setMaskedHistory] = useState(null);
   const [piiSpans, setPiiSpans] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [composerHeight, setComposerHeight] = useState(60);
   const typingTimeoutRef = useRef(null);
   const llmTimeoutRef = useRef(null);
   const livePipelineVersionRef = useRef(0);
   const riskRequestCounterRef = useRef(0);
   const sendInFlightRef = useRef(false);
   const assessAbortControllersRef = useRef({ pii: null, risk: null });
+  const composerContainerRef = useRef(null);
 
   const instructionSets = [
     {
       title: 'Scenario 1',
       content: [
-        { type: 'paragraph', body: <>Please imagine that you are <strong>Kimberly</strong> in this conversation and continue the interaction as realistically as possible.</> },
-        { type: 'paragraph', body: <>The suggested reply shows the intended goal of the response and may be copied directly to keep the intended goal of the response.</> },
+        { type: 'paragraph', body: <>In the following conversation, you are responding as <strong>Kimberly</strong>. Continue the interaction as if it were real.</>},
         { type: 'bubble', label: 'Reference text', text: <>Here's my information: Kimberly Miller, June 15, 1986, 42 Maple Street, Springfield, IL.</>},
-        { type: 'paragraph', body: <>Take on the role fully and interact naturally with the interface as you type.</> }
+        { type: 'paragraph', body: <>The suggested reply above reflects the intended goal of the response and <strong>may be copied directly</strong>. If you make changes, <strong>please keep the same overall intent.</strong></>}
       ]
     },
     {
       title: 'Scenario 2',
       content: [
-        { type: 'paragraph', body: <>Please imagine that you are <strong>Daniel</strong> in this conversation and continue the interaction as realistically as possible.</> },
-        { type: 'paragraph', body: <>The suggested reply shows the intended goal of the response and may be copied directly to keep the intended goal of the response.</> },
-        { type: 'bubble', label: 'Reference text', text: <>Certainly, Gerald! My full name is Daniel Thompson. I'm affiliated with Springfield University, and my research area is 'Neural Networks and Cognitive Computing.' My current project involves developing algorithms that improve decision-making processes for autonomous systems. I'll send my university email and phone number too. My email is daniel.thompson@springfield.edu, and my phone number is 555-526-7890. Is there anything else you need?</> },
-        { type: 'paragraph', body: <>Take on the role fully and interact naturally with the interface as you type.</> }
+        { type: 'paragraph', body: <>In the following conversation, you are responding as <strong>Daniel</strong>. Continue the interaction as if it were real.</>},
+        { type: 'bubble', label: 'Reference text', text: <>Certainly, Gerald! My full name is Daniel Thompson. I'm affiliated with Springfield University, and my research area is 'Neural Networks and Cognitive Computing.' My email is daniel.thompson@springfield.edu, and my phone number is 555-526-7890. Is there anything else you need?</>},
+        { type: 'paragraph', body: <>The suggested reply above reflects the intended goal of the response and <strong>may be copied directly</strong>. If you make changes, <strong>please keep the same overall intent.</strong></>}
       ]
     },
     {
       title: 'Scenario 3',
       content: [
-        { type: 'paragraph', body: <>Please imagine that you are <strong>Matthew</strong> in this conversation and continue the interaction as realistically as possible.</> },
-        { type: 'paragraph', body: <>The suggested reply shows the intended goal of the response and may be copied directly to keep the intended goal of the response.</> },
+        { type: 'paragraph', body: <>In the following conversation, you are responding as <strong>Matthew</strong>. Continue the interaction as if it were real.</>},
         { type: 'bubble', label: 'Reference text', text: <>I understand the need for verification. I'll send you my work email and that should suffice. It's matthew_1968@gmail.com</> },
-        { type: 'paragraph', body: <>Take on the role fully and interact naturally with the interface as you type.</> }
+        { type: 'paragraph', body: <>The suggested reply above reflects the intended goal of the response and <strong>may be copied directly</strong>. If you make changes, <strong>please keep the same overall intent.</strong></>}      
       ]
     }
   ];
@@ -448,6 +447,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     if (!textToUse) {
       return;
     }
+    setIsDrawerOpen(false);
 
     // Prevent a pending debounce-triggered assessment from racing and
     // overriding the explicit icon-click assessment request.
@@ -591,6 +591,34 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     abortActiveAssessRequests();
   }, []);
 
+  useEffect(() => {
+    const composerNode = composerContainerRef.current;
+    if (!composerNode) {
+      return undefined;
+    }
+
+    const updateComposerHeight = () => {
+      const measuredHeight = Math.ceil(composerNode.getBoundingClientRect().height);
+      setComposerHeight(measuredHeight || 60);
+    };
+
+    updateComposerHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateComposerHeight);
+      return () => {
+        window.removeEventListener('resize', updateComposerHeight);
+      };
+    }
+
+    const resizeObserver = new ResizeObserver(updateComposerHeight);
+    resizeObserver.observe(composerNode);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   const getContactName = () => {
     const convData = conversation.conversation || [];
     const firstReceived = convData.find((m) => m.direction === 'RECEIVED');
@@ -602,18 +630,23 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
   const contactName = getContactName();
 
   return (
-    <div className="conversation-screen">
+    <div
+      className="conversation-screen"
+      style={{ '--composer-height': `${composerHeight}px` }}
+    >
       <ChatHeader contactName={contactName} scenario={conversation.scenario} />
       <MessageList messages={messages} conversationKey={conversationIndex} />
-      <ChatComposer
-        draftText={draftText}
-        onTextChange={handleTyping}
-        onSend={handleSend}
-        variant={variant}
-        piiSpans={piiSpans}
-        onPiiClick={handleOpenWarning}
-        isSending={isSending}
-      />
+      <div ref={composerContainerRef} className="conversation-composer-layer">
+        <ChatComposer
+          draftText={draftText}
+          onTextChange={handleTyping}
+          onSend={handleSend}
+          variant={variant}
+          piiSpans={piiSpans}
+          onPiiClick={handleOpenWarning}
+          isSending={isSending}
+        />
+      </div>
       {isWarningOpen && (riskPending || warningState) && (
         <WarningModal
           warningState={warningState}

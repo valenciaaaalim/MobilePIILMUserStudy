@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  position: relative;
   background-color: #e5ddd5;
   background-image: 
     repeating-linear-gradient(
@@ -18,9 +19,9 @@
   --drawer-width: min(75vw, calc(100vw - var(--tab-width)));
   position: fixed;
   top: 0;
+  bottom: var(--composer-height, 0px);
   right: 0;
   width: calc(var(--drawer-width) + var(--tab-width));
-  height: 100vh;
   z-index: 1200;
   transform: translateX(var(--drawer-width));
   transition: transform 0.3s ease;
@@ -74,9 +75,14 @@
 
 .drawer-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0 0 var(--composer-height, 0px) 0;
   background: rgba(0, 0, 0, 0.8);
   z-index: 1100;
+}
+
+.conversation-composer-layer {
+  position: relative;
+  z-index: 1150;
 }
 
 .drawer-panel h2 {
