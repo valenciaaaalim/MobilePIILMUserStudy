@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Combining full name, birthdate, and address creates a complete identity profile."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birthdates and addresses are frequently used to bypass account security questions."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Recruiters need background checks, but asking via chat is highly unconventional."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Standard messaging platforms lack the encryption required for sensitive background check data."
+    },
+    "Psychological_Pressure": {
+      "Level": "Low",
+      "Explanation": "The request is direct but lacks overt urgency or aggressive emotional manipulation."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "my phone is [PHONE_NUMBER]. [FIRST_NAME] [LAST_NAME], june 15, 1986, 42 Maple Street, Springield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature sharing of high-impact identity data",
+      "Insecure transmission channel",
+      "Potential for identity theft or account takeover"
+    ],
+    "Reasoning": "Sharing a full name, exact date of birth, and home address over a standard chat interface is extremely risky. While the sender claims this is for a job background check, legitimate companies use secure, dedicated portals for this information rather than casual messaging. This specific combination of data is sufficient for identity theft or for resetting passwords on the user's personal accounts, making the risk level high at this early stage of the conversation.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my full personal details over chat. Do you have a secure company portal or a formal application link where I can submit my information for the background check?"
+  }
+}

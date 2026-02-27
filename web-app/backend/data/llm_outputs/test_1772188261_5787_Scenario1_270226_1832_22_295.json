@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Full name, birthdate, and home address can pinpoint your exact identity."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birthdays and addresses are common answers for security recovery questions."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are normal for jobs, but rare this early on."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Standard chat apps don't have the security needed for background checks."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "The sender creates urgency by making this a requirement to proceed."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature disclosure of high-impact PII",
+      "Potential for identity theft or account takeover",
+      "Unverified recruitment process"
+    ],
+    "Reasoning": "Sharing your full name, exact birthdate, and home address in a simple chat is very risky. While the recruiter mentioned 'compliance,' asking for this data before you've even had a formal interview or seen an official job description is a major red flag. This combination of info is exactly what scammers use to steal identities or break into private accounts. It's much safer to wait until you're using a secure, official company portal rather than sending it over a casual message.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my full birthdate and home address over chat. Do you have a secure company portal or an official application link where I can submit my details for the background check?"
+  }
+}

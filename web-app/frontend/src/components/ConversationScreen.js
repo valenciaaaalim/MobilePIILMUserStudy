@@ -9,7 +9,6 @@ import './ConversationScreen.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const PII_DEBOUNCE_MS = 800;
-const LLM_POST_PII_IDLE_MS = 2500;
 
 function ConversationScreen({ conversation, sessionId, participantId, participantProlificId, variant, onComplete, conversationIndex }) {
   const navigate = useNavigate();
@@ -32,11 +31,11 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [composerHeight, setComposerHeight] = useState(60);
   const typingTimeoutRef = useRef(null);
-  const llmTimeoutRef = useRef(null);
   const livePipelineVersionRef = useRef(0);
   const riskRequestCounterRef = useRef(0);
   const sendInFlightRef = useRef(false);
   const assessAbortControllersRef = useRef({ pii: null, risk: null });
+  const suppressAutoOpenRef = useRef(false);
   const composerContainerRef = useRef(null);
 
   const instructionSets = [
@@ -138,10 +137,6 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
     }
-    if (llmTimeoutRef.current) {
-      clearTimeout(llmTimeoutRef.current);
-      llmTimeoutRef.current = null;
-    }
   };
 
   const abortActiveAssessRequests = () => {
@@ -161,19 +156,6 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     || error?.name === 'AbortError'
   );
 
-  const queueLiveLlmStage = (pipelineVersion, textToUse) => {
-    if (llmTimeoutRef.current) {
-      clearTimeout(llmTimeoutRef.current);
-      llmTimeoutRef.current = null;
-    }
-    llmTimeoutRef.current = setTimeout(() => {
-      if (pipelineVersion !== livePipelineVersionRef.current) {
-        return;
-      }
-      assessRisk(textToUse, { liveTyping: true });
-    }, LLM_POST_PII_IDLE_MS);
-  };
-
   const runLivePiiStage = async (pipelineVersion, textToUse) => {
     if (pipelineVersion !== livePipelineVersionRef.current) {
       return;
@@ -184,7 +166,6 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
 
     if (variant !== 'A') {
       setPiiSpans([]);
-      queueLiveLlmStage(pipelineVersion, textToUse);
       return;
     }
 
@@ -220,8 +201,6 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
         setIsWarningOpen(false);
         return;
       }
-
-      queueLiveLlmStage(pipelineVersion, textToUse);
     } catch (error) {
       if (isCanceledRequest(error)) {
         return;
@@ -288,7 +267,12 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
 
   const assessRisk = async (text, options = {}) => {
     const textToUse = text.trim();
-    const { openOnComplete = false, silent = false, liveTyping = false } = options;
+    const {
+      openOnComplete = false,
+      silent = false,
+      liveTyping = false,
+      forcePiiRefresh = false
+    } = options;
     if (!textToUse) return null;
 
     const requestId = ++riskRequestCounterRef.current;
@@ -310,7 +294,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
     }
 
     if (variant === 'A') {
-      if (lastRawText && lastRawText.trim() === textToUse) {
+      if (!forcePiiRefresh && lastRawText && lastRawText.trim() === textToUse) {
         maskedToUse = lastMaskedText;
         hasPii = lastHasPii;
       } else {
@@ -407,7 +391,7 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
           setLastOfferedRewrite(rewrite);
         }
 
-        if (openOnComplete) {
+        if (openOnComplete && !suppressAutoOpenRef.current) {
           setIsWarningOpen(true);
           if (rewrite && rewrite.trim()) {
             setLastShownRewrite(rewrite);
@@ -448,20 +432,28 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
       return;
     }
     setIsDrawerOpen(false);
+    suppressAutoOpenRef.current = false;
 
-    // Prevent a pending debounce-triggered assessment from racing and
-    // overriding the explicit icon-click assessment request.
+    // Stop pending typing debounce before explicit analysis click.
     clearLiveTimers();
     livePipelineVersionRef.current += 1;
-    abortActiveAssessRequests();
 
     setIsWarningOpen(true);
 
-    if (!warningState || lastAssessedText !== textToUse) {
-      const assessment = await assessRisk(textToUse, { openOnComplete: true });
-      if (assessment?.saferRewrite) {
-        setLastShownRewrite(assessment.saferRewrite);
-      }
+    if (riskPending) {
+      return;
+    }
+
+    if (warningState && lastAssessedText === textToUse) {
+      return;
+    }
+
+    const assessment = await assessRisk(textToUse, {
+      openOnComplete: true,
+      forcePiiRefresh: true
+    });
+    if (assessment?.saferRewrite) {
+      setLastShownRewrite(assessment.saferRewrite);
     }
   };
 
@@ -567,22 +559,23 @@ function ConversationScreen({ conversation, sessionId, participantId, participan
 
   const handleAcceptRewrite = () => {
     if (warningState && warningState.saferRewrite) {
-      setDraftText(warningState.saferRewrite);
-      setLastShownRewrite(warningState.saferRewrite);
+      const rewriteText = warningState.saferRewrite;
+      // Clear stale underline immediately, then route through the normal
+      // typing pipeline so GLiNER re-runs on the accepted rewrite.
+      setPiiSpans([]);
+      handleTyping(rewriteText);
+      setLastShownRewrite(rewriteText);
     }
     setIsWarningOpen(false);
   };
 
   const handleContinueAnyway = () => {
-    // Allow user to exit immediately even while analysis is still pending.
-    // Bump request counter so stale in-flight responses are ignored.
+    // Keep in-flight explicit analysis alive so it can be reused later
+    // when the user has not changed the draft.
     if (riskPending) {
-      riskRequestCounterRef.current += 1;
-      setRiskPending(false);
+      suppressAutoOpenRef.current = true;
     }
     clearLiveTimers();
-    livePipelineVersionRef.current += 1;
-    abortActiveAssessRequests();
     setIsWarningOpen(false);
   };
 

@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Combining full name, birth date, and address enables precise individual tracking."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birth date and address are common security questions for account recovery."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are normal for jobs, but premature for a first chat."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Standard messaging platforms lack the encryption required for sensitive legal data."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "Uses the promise of an 'exciting opportunity' to bypass normal caution."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "my phone is [PHONE_NUMBER]. [NAME], june 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature disclosure of high-impact identity data",
+      "Potential for identity theft via security recovery factors",
+      "Insecure data transmission channel"
+    ],
+    "Reasoning": "The user is providing an exhaustive set of identity markers (full name, exact birth date, home address, and phone number) to a recruiter they just met. While the sender claims this is for 'compliance,' requesting this data within minutes of the first contact and before a formal interview or secure portal link is a classic social engineering tactic. This combination of data is sufficient for identity theft or unauthorized account access.",
+    "Rewrite": "I'm interested in the role. Please send over the official job description and a link to your company's secure application portal so I can provide the necessary details for a background check safely."
+  }
+}

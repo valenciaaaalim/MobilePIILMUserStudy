@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Combining full name, exact birthdate, and address enables precise identity theft."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birthdate and address are primary security questions for many financial accounts."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are normal for jobs, but rare before any interview."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Chat apps lack the secure encryption required for handling background checks."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "Uses 'regulatory compliance' to create a false sense of formal necessity."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "here's my information: [FIRST_NAME] [LAST_NAME], [LOCATION_STREET], 1986, 15 june, Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature sharing of high-impact identity markers",
+      "Potential for account takeover via authentication baiting",
+      "Unverified sender identity requesting sensitive data off-platform"
+    ],
+    "Reasoning": "Sharing your full name, exact birthdate, and home address this early is very risky. While the sender mentions a job opportunity, asking for this specific combination of data in a simple chat is a red flag. These details are often used to reset passwords or bypass security on your bank or email accounts. Usually, a legitimate company will wait until after an interview and use a secure, encrypted portal for background checks rather than asking for it directly in a message. Providing this now makes it too easy for someone to steal your identity.",
+    "Rewrite": "I'm interested in the role, but I'm uncomfortable sharing my full address and birthdate over chat. Do you have a secure portal or a formal application link where I can submit my details for a background check?"
+  }
+}

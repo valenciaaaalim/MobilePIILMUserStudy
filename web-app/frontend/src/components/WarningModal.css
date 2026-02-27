@@ -49,6 +49,9 @@
 
 .warning-content {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .warning-content h3 {
@@ -58,22 +61,26 @@
 }
 
 .warning-explanation {
-  margin: 0 0 16px 0;
+  margin: 0;
   color: #666;
   line-height: 1.5;
 }
 
+.risk-block,
 .rewrite-block {
-  margin-top: 8px;
-  margin-bottom: 28px;
+  margin: 0;
 }
 
 .reasoning-block {
-  margin-top: 0;
+  margin: 0;
+}
+
+.reasoning-block h3 {
+  color: #666;
 }
 
 .risk-level {
-  margin: 0 0 16px 0;
+  margin: 0;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -84,6 +91,10 @@
 }
 
 .risk-level-medium {
+  color: #ef6c00;
+}
+
+.risk-level-moderate {
   color: #ef6c00;
 }
 

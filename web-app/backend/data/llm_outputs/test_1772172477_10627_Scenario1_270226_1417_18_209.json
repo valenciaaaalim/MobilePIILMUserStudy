@@ -1,0 +1,34 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "Medium",
+      "Explanation": "Combining name, phone, and professional profile makes you very easy to track."
+    },
+    "Authentication_Baiting": {
+      "Level": "Low",
+      "Explanation": "A phone number is less likely to be a direct security answer."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Giving a phone number is common, but still helps an unverified recruiter."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Chat apps don't protect your data like an official company system does."
+    },
+    "Psychological_Pressure": {
+      "Level": "Low",
+      "Explanation": "The user is setting boundaries, but still feels they must provide contact."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "I'm interested in the role, but I'd prefer to provide my sensitive personal details through a secure company portal or official application link. phone is [PHONE_NUMBER]",
+    "Risk_Level": "MODERATE",
+    "Primary_Risk_Factors": [
+      "Premature Data Disclosure",
+      "Unverified Recruiter Identity"
+    ],
+    "Reasoning": "You're doing the right thing by questioning why they need your private details so early. However, giving out your phone number to someone you haven't verified yet still carries risk. Scammers often use 'job opportunities' to collect active phone numbers for future schemes. It's better to wait until you have a confirmed, official link before sharing any contact info beyond the current chat.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to provide my sensitive personal details and contact information through a secure company portal or official application link. Please send that over so I can get started."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "Medium",
+      "Explanation": "Combining name, birthday, and phone number makes tracking you very easy."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birthdays and phone numbers are often used to reset your account passwords."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "While jobs require background checks, asking in a chat is very unusual."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "This chat platform isn't safe for sharing your private legal identity documents."
+    },
+    "Psychological_Pressure": {
+      "Level": "Low",
+      "Explanation": "The sender is polite but is using 'compliance' to justify the data."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "I'm interested in the role. Please send over a link to your official company career portal or the formal application so I can review the details and provide my information securely there. my phone number is [PHONE_NUMBER]",
+    "Risk_Level": "MODERATE",
+    "Primary_Risk_Factors": [
+      "Premature sharing of contact info",
+      "Insecure channel for sensitive data",
+      "Verification baiting"
+    ],
+    "Reasoning": "You did a great job by pushing back and asking for an official portal instead of giving your full address and birth date in a chat. However, you still shared your phone number. Even though it seems helpful, sharing your number this early with someone who is already asking for sensitive identity details is risky. It's better to verify their company and the job posting before giving them any direct way to contact you or link your accounts.",
+    "Rewrite": "I'm interested in the role. Please send over a link to your official company career portal or the formal application so I can review the details and provide my information securely through your verified system."
+  }
+}

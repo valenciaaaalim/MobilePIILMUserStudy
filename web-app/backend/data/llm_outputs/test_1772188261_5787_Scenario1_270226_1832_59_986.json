@@ -1,0 +1,31 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "Low",
+      "Explanation": "User is refusing to share data that would uniquely identify them."
+    },
+    "Authentication_Baiting": {
+      "Level": "Low",
+      "Explanation": "The user is actively protecting birthdate and address from potential misuse."
+    },
+    "Contextual_Alignment": {
+      "Level": "Low",
+      "Explanation": "The user's refusal aligns perfectly with standard professional privacy boundaries."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "Low",
+      "Explanation": "User correctly identifies that chat is unsuitable for sensitive background checks."
+    },
+    "Psychological_Pressure": {
+      "Level": "Low",
+      "Explanation": "The user is resisting the sender's pressure and maintaining personal boundaries."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "I'm interested in the role, but I'm not comfortable sharing my full birthdate and [LOCATION_ADDRESS] over chat. Do you have a secure company portal or an official application link where I can submit my details for the background check?",
+    "Risk_Level": "LOW",
+    "Primary_Risk_Factors": [],
+    "Reasoning": "Your response is highly appropriate and demonstrates excellent security awareness. The sender requested high-impact personal details (birthdate and home address) very early in the conversation without providing a secure environment. By redirecting the request to an official portal, you are verifying the company's legitimacy while protecting yourself from potential identity theft or social engineering. You've correctly identified that professional background checks should never happen over a standard chat interface.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my full birthdate and address over chat. Do you have a secure company portal or an official application link where I can submit my details for the background check?"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Full name, birthdate, and home address can uniquely identify any individual."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birthdays and addresses are common security questions for bank and email accounts."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Background checks are normal for jobs, but rare before an initial interview."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "This chat platform is likely not secure enough for sensitive personal records."
+    },
+    "Psychological_Pressure": {
+      "Level": "Low",
+      "Explanation": "The tone is friendly and professional without using obvious high-pressure tactics."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Here's my information: [FIRST_NAME] [LAST_NAME], June 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature PII Disclosure",
+      "Identity Theft Risk",
+      "Lack of Verified Channel"
+    ],
+    "Reasoning": "You are sharing extremely sensitive details very early in a conversation with someone you haven't fully verified yet. While the recruiter seems professional, asking for your full name, exact birthdate, and home address before even a first phone call is a major red flag. This combination of data is exactly what identity thieves need to bypass security on your private accounts. It's much safer to wait until you have a formal interview or a secure, official company portal to provide this kind of information.",
+    "Rewrite": "I'm interested in the role, but I'd prefer to discuss the opportunity first. Once we move to a formal stage, I'm happy to provide background check details through your company's secure HR portal."
+  }
+}

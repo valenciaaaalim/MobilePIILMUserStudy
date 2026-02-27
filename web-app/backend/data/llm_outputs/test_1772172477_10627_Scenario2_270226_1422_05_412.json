@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Combining full name and university makes you very easy to track down."
+    },
+    "Authentication_Baiting": {
+      "Level": "Low",
+      "Explanation": "This info is mostly public and unlikely used for account recovery."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Name and school fit the topic, but contact info feels rushed."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "This platform isn't secure enough for sharing private contact details yet."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "The excitement and promise of funding create a sense of urgency."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "Certainly [NAME]! my full name is [FIRST_NAME] [LAST_NAME]. i'm affiliated with [LAST_NAME]",
+    "Risk_Level": "MODERATE",
+    "Primary_Risk_Factors": [
+      "Premature sharing of contact info",
+      "High linkability",
+      "Incomplete sender verification"
+    ],
+    "Reasoning": "While sharing your name and school is normal for a research discussion, providing your direct phone number and email this early is risky. The sender is offering funding, which is a common tactic to make you overlook privacy. Since you haven't verified if Gerald is actually from InnovateTech Ventures, you should keep the conversation on this platform until his identity is confirmed and the offer is validated.",
+    "Rewrite": "Certainly! I am [FIRST_NAME], and I am affiliated with [UNIVERSITY]. I'm happy to discuss my research here first before we move to email or phone."
+  }
+}

@@ -1,21 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './WarningModal.css';
 
 function WarningModal({ warningState, riskPending, onAcceptRewrite, onContinueAnyway }) {
+  const [loadingDots, setLoadingDots] = useState('.');
   const rewriteText = warningState?.saferRewrite || '';
   const reasoning = warningState?.reasoning || '';
   const riskLevel = warningState?.riskLevel || 'UNKNOWN';
   const disableAccept = riskPending || !rewriteText.trim();
+
+  useEffect(() => {
+    if (!riskPending) {
+      setLoadingDots('.');
+      return undefined;
+    }
+    const frames = ['.', '..', '...'];
+    let index = 0;
+    const timer = setInterval(() => {
+      index = (index + 1) % frames.length;
+      setLoadingDots(frames[index]);
+    }, 350);
+    return () => clearInterval(timer);
+  }, [riskPending]);
+
   return (
     <div className="warning-modal-overlay">
       <div className="warning-modal">
         <div className="warning-content">
           {riskPending ? (
-            <div className="warning-explanation">Loading analysis...</div>
+            <div className="warning-explanation">Loading analysis{loadingDots}</div>
           ) : (
             <>
-              <h3>Risk Level</h3>
-              <p className={`risk-level risk-level-${riskLevel.toLowerCase()}`}>{riskLevel}</p>
+              <div className="risk-block">
+                <h3>Risk Level</h3>
+                <p className={`risk-level risk-level-${riskLevel.toLowerCase()}`}>{riskLevel}</p>
+              </div>
               <div className="rewrite-block">
                 <h3>Suggested Rewrite</h3>
                 <div className="rewrite-text">{rewriteText || 'No rewrite available.'}</div>

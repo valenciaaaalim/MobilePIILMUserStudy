@@ -24,10 +24,10 @@
 
 .pii-alert-bubble {
   position: absolute;
-  top: -18px;
+  top: -19px;
   left: 0;
-  width: 20px;
-  height: 20px;
+  width: 23px;
+  height: 23px;
   border-radius: 50%;
   border: none;
   background-color: #ff6b6b;
@@ -41,26 +41,33 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 3;
   transform-origin: center;
-  transition: background-color 0.2s;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .pii-alert-bubble:hover {
   background-color: #ff4f4f;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .pii-alert-bubble--pulse {
-  animation: piiBubblePulse 220ms ease-out;
+  animation: piiBubblePulse 680ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes piiBubblePulse {
   0% {
     transform: scale(1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   }
-  50% {
-    transform: scale(1.2);
+  45% {
+    transform: scale(1.32);
+    box-shadow: 0 7px 14px rgba(255, 107, 107, 0.36);
+  }
+  75% {
+    transform: scale(1.08);
   }
   100% {
     transform: scale(1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -115,6 +122,20 @@
   overflow-y: hidden;
   user-select: text;
   -webkit-user-select: text;
+  -webkit-touch-callout: default;
+  -webkit-text-fill-color: #111;
+  color: #111;
+  caret-color: #111;
+}
+
+.message-input::selection {
+  background: rgba(37, 211, 102, 0.28);
+  color: #111;
+}
+
+.message-input::-moz-selection {
+  background: rgba(37, 211, 102, 0.28);
+  color: #111;
 }
 
 .send-button {

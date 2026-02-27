@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Full name, birthdate, and home address can pinpoint your exact identity."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birthdate and address are common security questions used to reset passwords."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Standard for jobs, but very early to ask before an interview."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Chat apps lack the legal and technical safeguards of official portals."
+    },
+    "Psychological_Pressure": {
+      "Level": "Medium",
+      "Explanation": "Uses the promise of an 'exciting opportunity' to bypass normal caution."
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "my phone is [PHONE_NUMBER]. [FIRST_NAME] [LAST_NAME], june 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE].",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature disclosure of high-impact identity data",
+      "Request for security recovery factors via unverified chat",
+      "Bypassing secure HR application infrastructure"
+    ],
+    "Reasoning": "The user is providing an exhaustive set of personal details\u2014full name, exact birthdate, home address, and phone number\u2014to a stranger in a chat window. While the sender claims this is for a job background check, asking for this level of sensitive info before a single interview or even providing a formal job description is a major red flag for identity theft. This data should only be submitted through an official, encrypted corporate portal after the company's legitimacy is fully verified.",
+    "Rewrite": "I'd like to move forward. Please send a link to your official company portal where I can securely submit my background check details."
+  }
+}

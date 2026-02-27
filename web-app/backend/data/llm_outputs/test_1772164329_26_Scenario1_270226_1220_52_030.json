@@ -1,0 +1,35 @@
+{
+  "Output_1": {
+    "Linkability_Risk": {
+      "Level": "High",
+      "Explanation": "Combining full name, birth date, and address enables precise individual tracking."
+    },
+    "Authentication_Baiting": {
+      "Level": "High",
+      "Explanation": "Birth date and address are common security questions for account recovery."
+    },
+    "Contextual_Alignment": {
+      "Level": "Medium",
+      "Explanation": "Requesting deep personal data before a formal interview or job offer."
+    },
+    "Platform_Trust_Obligation": {
+      "Level": "High",
+      "Explanation": "Standard messaging platforms lack the security for handling sensitive background data."
+    },
+    "Psychological_Pressure": {
+      "Level": "",
+      "Explanation": ""
+    }
+  },
+  "Output_2": {
+    "Original_User_Message": "my phone is [PHONE_NUMBER]. [FIRST_NAME] [LAST_NAME], june 15, 1986, [LOCATION_STREET], Springfield, [LOCATION_STATE]",
+    "Risk_Level": "HIGH",
+    "Primary_Risk_Factors": [
+      "Premature disclosure of high-impact identity data",
+      "Potential for identity theft via authentication baiting",
+      "Unverified sender requesting sensitive info off-platform"
+    ],
+    "Reasoning": "The user is providing an extremely high-risk combination of data (full name, exact birth date, home address, and phone number) to a recruiter they have only just met. While the sender claims this is for compliance, requesting such details via a standard chat message before even a first interview is a major red flag. This specific combination of data is frequently used for identity theft and to bypass security questions on financial accounts.",
+    "Rewrite": "I'm interested in the role, but I'm not comfortable sharing my full birth date and home address over chat. Do you have a secure company portal or a formal application link where I can submit my details for a background check?"
+  }
+}
