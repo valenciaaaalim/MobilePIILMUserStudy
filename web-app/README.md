@@ -41,7 +41,8 @@ This is a web application for user testing of the WhatsApp risk assessment syste
    ```env
    GEMINI_API_KEY=your_gemini_api_key_here
    GEMINI_MODEL_NAME=gemini-3-flash-preview
-   GEMINI_TIMEOUT_SECONDS=30
+   GEMINI_TIMEOUT_SECONDS=15
+   GEMINI_MAX_ATTEMPTS=2
    GEMINI_LIVE_TIMEOUT_SECONDS=8
    GEMINI_LIVE_MAX_ATTEMPTS=1
    DATABASE_URL=sqlite:///./web_app.db
@@ -101,7 +102,8 @@ The frontend will be available at `http://localhost:3000`.
    ```env
    GEMINI_API_KEY=your_gemini_api_key_here
    GEMINI_MODEL_NAME=gemini-3-flash-preview
-   GEMINI_TIMEOUT_SECONDS=30
+   GEMINI_TIMEOUT_SECONDS=15
+   GEMINI_MAX_ATTEMPTS=2
    GEMINI_LIVE_TIMEOUT_SECONDS=8
    GEMINI_LIVE_MAX_ATTEMPTS=1
    ```

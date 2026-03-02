@@ -31,36 +31,11 @@ ENV GLINER_MODEL_NAME=knowledgator/gliner-pii-base-v1.0
 # Download NLTK data for sentence tokenization
 RUN python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab')"
 
-# Pre-download GLiNER model and tokenizer so first request doesn't block
-# This can take several minutes - be patient!
-RUN python - <<'PY'
-import os
-import sys
-from gliner import GLiNER
-from transformers import AutoTokenizer
-
-model_name = os.environ.get("GLINER_MODEL_NAME", "knowledgator/gliner-pii-base-v1.0")
-print(f"[BUILD] Starting GLiNER model download: {model_name}", flush=True)
-print("[BUILD] This may take 2-5 minutes depending on network speed...", flush=True)
-
-try:
-    print("[BUILD] Downloading GLiNER model...", flush=True)
-    model = GLiNER.from_pretrained(model_name)
-    print("[BUILD] ✓ GLiNER model downloaded successfully", flush=True)
-    
-    print("[BUILD] Downloading tokenizer...", flush=True)
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    print("[BUILD] ✓ Tokenizer downloaded successfully", flush=True)
-    
-    print(f"[BUILD] ✓ Pre-downloaded GLiNER model: {model_name}", flush=True)
-except Exception as e:
-    print(f"[BUILD] ERROR downloading model: {e}", flush=True)
-    print("[BUILD] Model will be downloaded on first use instead", flush=True)
-    sys.exit(0)  # Don't fail the build, download on first use
-PY
+# Optional model warmup at build-time removed because Docker heredoc syntax
+# is not supported in this Cloud Build setup.
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
