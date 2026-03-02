@@ -8,7 +8,7 @@ import logging
 import threading
 
 from app.config import settings
-from app.database import init_db, get_table_info
+from app.database import init_db, get_table_info, get_db_dialect, is_db_configured, require_db
 from app.middleware.security import SecurityHeadersMiddleware
 from app.routers import (
     participants,
@@ -56,15 +56,18 @@ app.include_router(completion.router)
 @app.on_event("startup")
 async def startup_event():
     """Initialize database and other startup tasks."""
-    logger.info("Starting up application...")
+    logger.info("Starting up application (DATABASE_URL set=%s, db_dialect=%s)", bool(settings.DATABASE_URL), get_db_dialect())
     try:
-        init_db()
-        logger.info("Database initialized with 8 normalized tables")
-        
-        # Log table info for debugging
-        table_info = get_table_info()
-        for table_name, info in table_info.items():
-            logger.info(f"  - {table_name}: {info['row_count']} rows, {len(info['columns'])} columns")
+        if is_db_configured():
+            init_db()
+            logger.info("Database initialized with 8 normalized tables")
+
+            # Log table info for debugging
+            table_info = get_table_info()
+            for table_name, info in table_info.items():
+                logger.info(f"  - {table_name}: {info['row_count']} rows, {len(info['columns'])} columns")
+        else:
+            logger.warning("Database is not configured at startup; DB-backed endpoints will return 503.")
         
         # Warm up GLiNER model in background
         def warm_pii_model():
@@ -74,9 +77,14 @@ async def startup_event():
             except Exception as e:
                 logger.error(f"GLiNER warmup failed: {e}")
         threading.Thread(target=warm_pii_model, daemon=True).start()
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
-        raise
+    except Exception:
+        logger.exception("Database initialization failed during startup; continuing to serve non-DB endpoints")
+
+
+@app.get("/healthz")
+async def healthz():
+    """Liveness endpoint that does not touch the database."""
+    return {"ok": True}
 
 
 @app.get("/health")
@@ -91,6 +99,7 @@ async def health_check():
 @app.get("/db-info")
 async def db_info():
     """Get database table information (for debugging)."""
+    require_db()
     return get_table_info()
 
 
