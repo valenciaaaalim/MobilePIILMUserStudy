@@ -11,6 +11,23 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+ENV GLINER_MODEL_NAME=knowledgator/gliner-pii-base-v1.0
+ENV HF_HOME=/app/model_cache
+ENV TRANSFORMERS_CACHE=/app/model_cache
+ENV HF_HUB_CACHE=/app/model_cache
+
+# Download NLTK data for sentence tokenization
+RUN python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab')"
+
+# Pre-download GLiNER model at build-time (single-line command; no heredoc).
+RUN mkdir -p /app/model_cache && \
+    python -c "from gliner import GLiNER; from transformers import AutoTokenizer; m='knowledgator/gliner-pii-base-v1.0'; GLiNER.from_pretrained(m); AutoTokenizer.from_pretrained(m)"
+
 # Copy application code
 COPY app/ ./app/
 
@@ -22,17 +39,6 @@ COPY seed_data.py .
 
 # Create assets directory if needed
 RUN mkdir -p app/assets
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
-ENV GLINER_MODEL_NAME=knowledgator/gliner-pii-base-v1.0
-
-# Download NLTK data for sentence tokenization
-RUN python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab')"
-
-# Optional model warmup at build-time removed because Docker heredoc syntax
-# is not supported in this Cloud Build setup.
 
 # Expose port
 EXPOSE 8080
