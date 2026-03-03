@@ -200,6 +200,8 @@ def init_db() -> None:
     if engine is None:
         logger.warning("Skipping DB initialization because database is not configured.")
         return
+    # Ensure all model classes are imported so Base.metadata knows every table.
+    from app import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
     _ensure_participant_views()
     logger.info("Database tables initialized")
