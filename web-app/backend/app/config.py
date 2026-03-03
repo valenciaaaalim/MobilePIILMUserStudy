@@ -52,10 +52,10 @@ class Settings:
         _clean_env(os.getenv("GEMINI_MODEL_NAME"))
         or "gemini-3-flash-preview"
     )
-    GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "15"))
+    GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "20"))
     GEMINI_MAX_ATTEMPTS: int = int(os.getenv("GEMINI_MAX_ATTEMPTS", "2"))
-    GEMINI_LIVE_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_LIVE_TIMEOUT_SECONDS", "8"))
-    GEMINI_LIVE_MAX_ATTEMPTS: int = int(os.getenv("GEMINI_LIVE_MAX_ATTEMPTS", "1"))
+    GEMINI_LIVE_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_LIVE_TIMEOUT_SECONDS", "20"))
+    GEMINI_LIVE_MAX_ATTEMPTS: int = int(os.getenv("GEMINI_LIVE_MAX_ATTEMPTS", "2"))
     GEMINI_THINKING_LEVEL: str = (_clean_env(os.getenv("GEMINI_THINKING_LEVEL")) or "low").lower()
     GEMINI_INCLUDE_THOUGHTS: bool = _env_bool("GEMINI_INCLUDE_THOUGHTS", True)
     

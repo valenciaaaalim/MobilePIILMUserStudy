@@ -203,7 +203,7 @@ class GeminiService:
                 if attempt < max_attempts:
                     should_retry = status in (429, 500, 502, 503, 504) or status is None
                     if should_retry:
-                        sleep_seconds = 2 ** (attempt - 1)
+                        sleep_seconds = 2
                         logger.warning(
                             "Gemini request failed, retrying in %ss (attempt=%d/%d): %s",
                             sleep_seconds,
