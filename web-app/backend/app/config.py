@@ -48,8 +48,8 @@ class Settings:
     # If both are set, prefer GOOGLE_API_KEY.
     GOOGLE_API_KEY: Optional[str] = _clean_env(os.getenv("GOOGLE_API_KEY"))
     GEMINI_API_KEY: Optional[str] = _clean_env(os.getenv("GEMINI_API_KEY"))
-    GEMINI_MODEL_NAME: str = (
-        _clean_env(os.getenv("GEMINI_MODEL_NAME"))
+    GEMINI_MODEL: str = (
+        _clean_env(os.getenv("GEMINI_MODEL"))
         or "gemini-3-flash-preview"
     )
     GEMINI_TIMEOUT_SECONDS: int = int(os.getenv("GEMINI_TIMEOUT_SECONDS", "20"))

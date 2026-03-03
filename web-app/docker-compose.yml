@@ -8,7 +8,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:///./data/web_app.db  # Changed to match volume mount
-      - GEMINI_MODEL_NAME=${GEMINI_MODEL_NAME}
+      - GEMINI_MODEL=${GEMINI_MODEL}
       - GEMINI_TIMEOUT_SECONDS=${GEMINI_TIMEOUT_SECONDS:-15}
       - GEMINI_MAX_ATTEMPTS=${GEMINI_MAX_ATTEMPTS:-2}
       - GEMINI_LIVE_TIMEOUT_SECONDS=${GEMINI_LIVE_TIMEOUT_SECONDS:-8}

@@ -33,7 +33,7 @@ class GeminiService:
         if settings.GOOGLE_API_KEY and settings.GEMINI_API_KEY:
             logger.info("Both GOOGLE_API_KEY and GEMINI_API_KEY are set; using GOOGLE_API_KEY.")
 
-        self.model = settings.GEMINI_MODEL_NAME
+        self.model = settings.GEMINI_MODEL
         self.timeout = int(timeout_seconds if timeout_seconds is not None else settings.GEMINI_TIMEOUT_SECONDS)
         self.max_attempts = max(1, int(max_attempts if max_attempts is not None else settings.GEMINI_MAX_ATTEMPTS))
         self.thinking_level = settings.GEMINI_THINKING_LEVEL
