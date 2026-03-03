@@ -37,7 +37,7 @@ Analyze Current_User_Message using Conversation_History_JSON. Evaluate the reque
     "Original_User_Message": "Current_User_Message",
     "Risk_Level": "LOW|MODERATE|HIGH",
     "Primary_Risk_Factors": [],
-    "Reasoning": "Synthesize ALL factors in Output_1. Explain why this specific request is or isn't appropriate by connecting the data type to the sender's behavior and the current conversation stage.",
+    "Reasoning": "Synthesize ALL factors in Output_1. Explain why this specific request is or isn't appropriate by connecting the data type to the sender's behavior and the current conversation stage. Keep it concise (2-3 sentences).",
     "Rewrite": "Intent-preserved, sensitive data generalized or omitted."
   }
 }

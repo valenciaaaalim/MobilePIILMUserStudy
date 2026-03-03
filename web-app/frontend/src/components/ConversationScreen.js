@@ -7,7 +7,7 @@ import ChatComposer from './ChatComposer';
 import WarningModal from './WarningModal';
 import './ConversationScreen.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:8080';
 const PII_DEBOUNCE_MS = 800;
 
 function ConversationScreen({ conversation, sessionId, participantId, participantProlificId, variant, onComplete, conversationIndex }) {

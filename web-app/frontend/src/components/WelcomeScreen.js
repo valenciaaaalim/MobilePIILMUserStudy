@@ -4,7 +4,7 @@ import axios from 'axios';
 import './WelcomeScreen.css';
 import consentFormPdf from './003_OnlineSurvey_Consent_MobilePIILM.pdf';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:8080';
 
 function WelcomeScreen({ prolificId }) {
   const navigate = useNavigate();

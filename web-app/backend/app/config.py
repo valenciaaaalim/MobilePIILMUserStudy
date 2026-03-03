@@ -69,7 +69,7 @@ class Settings:
     
     # Server settings
     HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8000"))
+    PORT: int = int(os.getenv("PORT", "8080"))
     
     # Cloud Run settings
     PROJECT_ID: str = os.getenv("GOOGLE_CLOUD_PROJECT", "")

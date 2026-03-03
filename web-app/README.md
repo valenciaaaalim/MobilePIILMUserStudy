@@ -58,7 +58,7 @@ This is a web application for user testing of the WhatsApp risk assessment syste
 
 6. **Run the backend:**
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
    ```
 
 ### Frontend Setup
@@ -76,7 +76,7 @@ This is a web application for user testing of the WhatsApp risk assessment syste
 3. **Set environment variables:**
    Create a `.env` file:
    ```env
-   REACT_APP_API_URL=http://localhost:8000
+   REACT_APP_BACKEND_BASE_URL=http://localhost:8080
    ```
 
 4. **Run the frontend:**
@@ -131,7 +131,7 @@ The frontend will be available at `http://localhost:3000`.
    docker-compose logs -f web-app-frontend
    ```
 
-The backend will be available at `http://localhost:8000` and frontend at `http://localhost:3000`.
+The backend will be available at `http://localhost:8080` and frontend at `http://localhost:3000`.
 
 ### Docker Container Management
 

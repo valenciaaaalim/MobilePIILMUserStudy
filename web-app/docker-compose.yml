@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: web-app-backend
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
       - DATABASE_URL=sqlite:///./data/web_app.db  # Changed to match volume mount
       - GEMINI_MODEL=${GEMINI_MODEL}
@@ -21,7 +21,7 @@ services:
       - ./backend/data:/app/data  # For SQLite database persistence
       - ./backend/app/assets/annotated_test.json:/app/app/assets/annotated_test.json:ro  # Mount the JSON file for seeding (read-only)
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -35,7 +35,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_BACKEND_BASE_URL=http://localhost:8080
     depends_on:
       web-app-backend:
         condition: service_healthy

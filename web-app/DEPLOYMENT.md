@@ -222,7 +222,7 @@ gcloud run services update $SERVICE_NAME \
    - Connect your Git repository
    - Set build command: `npm run build`
    - Set output directory: `build`
-   - Set environment variable: `REACT_APP_API_URL=https://api.your-domain.com`
+   - Set environment variable: `REACT_APP_BACKEND_BASE_URL=https://api.your-domain.com`
 
 ### Option 2: Cloud Run
 

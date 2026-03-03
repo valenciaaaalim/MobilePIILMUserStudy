@@ -9,7 +9,7 @@ import AlreadyCompletedScreen from './components/AlreadyCompletedScreen';
 import AdminParticipantView from './components/AdminParticipantView';
 import './App.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:8080';
 const PROLIFIC_STORAGE_KEY = 'whatsapp_prolific_id';
 
 // Hardcoded conversation data (from annotated_test.json)

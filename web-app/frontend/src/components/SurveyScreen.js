@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import axios from 'axios';
 import './SurveyScreen.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:8080';
 
 // Baseline Self-Assessment (previously pre-survey) - 4 Likert 1-7 items
 const BASELINE_QUESTIONS = [
