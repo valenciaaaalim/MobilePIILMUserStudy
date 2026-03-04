@@ -166,8 +166,8 @@ def _resolve_scenario_id(payload: Dict[str, Any]) -> int:
         scenario_id = int(raw_session_id)
     except (TypeError, ValueError):
         raise HTTPException(status_code=400, detail="Invalid session_id")
-    if scenario_id < 1:
-        raise HTTPException(status_code=400, detail="Invalid session_id")
+    if scenario_id < 1 or scenario_id > 3:
+        raise HTTPException(status_code=400, detail="session_id must be between 1 and 3")
     return scenario_id
 
 
