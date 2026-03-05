@@ -9,7 +9,7 @@ from app.models import Participant
 from app.schemas import ParticipantCreate, ParticipantSchema, ParticipantCreateResponse
 from app.config import settings
 from app.utils import get_singapore_time
-from app.participant_state import sync_participant_completion_state
+from app.participant_state import sync_participant_completion_state, is_completed_state
 
 router = APIRouter(prefix="/api/participants", tags=["participants"])
 
@@ -40,8 +40,9 @@ def create_participant(
         ).first()
         if existing:
             existing = sync_participant_completion_state(db, existing, mark_active=True)
-            status = "completed" if existing.is_complete else "existing"
-            completion_url = build_completion_url(existing.prolific_id) if existing.is_complete else None
+            completed = is_completed_state(existing.is_complete)
+            status = "completed" if completed else "existing"
+            completion_url = build_completion_url(existing.prolific_id) if completed else None
             return ParticipantCreateResponse(
                 id=existing.id,
                 prolific_id=existing.prolific_id,
@@ -64,8 +65,9 @@ def create_participant(
     participant = Participant(
         prolific_id=participant_data.prolific_id,
         variant=variant,
+        participant_variant=variant,
         created_at=now_sgt,
-        is_complete=None
+        is_complete="Progress"
     )
     db.add(participant)
     try:
@@ -77,8 +79,9 @@ def create_participant(
         ).first()
         if existing:
             existing = sync_participant_completion_state(db, existing, mark_active=True)
-            status = "completed" if existing.is_complete else "existing"
-            completion_url = build_completion_url(existing.prolific_id) if existing.is_complete else None
+            completed = is_completed_state(existing.is_complete)
+            status = "completed" if completed else "existing"
+            completion_url = build_completion_url(existing.prolific_id) if completed else None
             return ParticipantCreateResponse(
                 id=existing.id,
                 prolific_id=existing.prolific_id,

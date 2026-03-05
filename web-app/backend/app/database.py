@@ -81,8 +81,9 @@ def _ensure_participant_views() -> None:
                 sr.scenario_number,
                 sr.original_input,
                 sr.masked_text,
-                sr.risk_level,
-                sr."Reasoning",
+                sr.output_id,
+                sr.input_tokens,
+                sr.total_tokens,
                 sr.model,
                 COALESCE((
                     SELECT MAX(lo.nth_call)
@@ -90,6 +91,8 @@ def _ensure_participant_views() -> None:
                     WHERE lo.participant_id = sr.participant_id
                       AND lo.scenario_id = sr.scenario_number
                 ), 0) AS scenario_llm_usage,
+                sr.risk_level,
+                sr.reasoning,
                 sr.suggested_rewrite,
                 sr.final_message,
                 sr.primary_risk_factors,
@@ -119,6 +122,8 @@ def _ensure_participant_views() -> None:
                 pss.confidence_judgment,
                 pss.uncertainty_sharing,
                 pss.perceived_risk,
+                pss.included_pii_types,
+                pss.included_pii_other_text,
                 pss.warning_clarity,
                 pss.warning_helpful,
                 pss.rewrite_quality,
@@ -184,26 +189,7 @@ def _ensure_participant_views() -> None:
                 sr.id,
                 sr.participant_id,
                 sr.scenario_number,
-                sr.original_input,
-                sr.masked_text,
-                sr.risk_level,
-                sr."Reasoning",
-                sr.model,
-                '[B]' AS scenario_llm_usage,
-                sr.suggested_rewrite,
                 sr.final_message,
-                sr.primary_risk_factors,
-                sr.linkability_risk_level,
-                sr.linkability_risk_explanation,
-                sr.authentication_baiting_level,
-                sr.authentication_baiting_explanation,
-                sr.contextual_alignment_level,
-                sr.contextual_alignment_explanation,
-                sr.platform_trust_obligation_level,
-                sr.platform_trust_obligation_explanation,
-                sr.psychological_pressure_level,
-                sr.psychological_pressure_explanation,
-                sr.accepted_rewrite,
                 sr.completed_at,
                 p.prolific_id AS participant_prolific_id,
                 p.variant AS participant_variant
@@ -219,9 +205,8 @@ def _ensure_participant_views() -> None:
                 pss.confidence_judgment,
                 pss.uncertainty_sharing,
                 pss.perceived_risk,
-                pss.warning_clarity,
-                pss.warning_helpful,
-                pss.rewrite_quality,
+                pss.included_pii_types,
+                pss.included_pii_other_text,
                 p.prolific_id AS participant_prolific_id,
                 p.variant AS participant_variant
             FROM post_scenario_survey pss
@@ -236,8 +221,6 @@ def _ensure_participant_views() -> None:
                 eos.realism_explanation,
                 eos.overall_confidence,
                 eos.sharing_rationale,
-                eos.trust_system,
-                eos.trust_explanation,
                 p.prolific_id AS participant_prolific_id,
                 p.variant AS participant_variant
             FROM end_of_study_survey eos
@@ -292,9 +275,28 @@ def _ensure_schema_columns() -> None:
             col.get("name"): str(col.get("type", "")).lower()
             for col in inspector.get_columns("scenario_responses")
         }
+        if "Reasoning" in existing_columns and "reasoning" not in existing_columns:
+            statements.append('ALTER TABLE scenario_responses RENAME COLUMN "Reasoning" TO reasoning')
 
         if "model" not in existing_columns:
             statements.append('ALTER TABLE scenario_responses ADD COLUMN "model" VARCHAR')
+        if "output_id" not in existing_columns:
+            statements.append('ALTER TABLE scenario_responses ADD COLUMN "output_id" VARCHAR')
+        if "total_tokens" not in existing_columns:
+            statements.append('ALTER TABLE scenario_responses ADD COLUMN "total_tokens" INTEGER')
+        if "input_tokens" not in existing_columns:
+            statements.append('ALTER TABLE scenario_responses ADD COLUMN "input_tokens" INTEGER')
+        if "participant_variant" not in existing_columns:
+            statements.append('ALTER TABLE scenario_responses ADD COLUMN "participant_variant" VARCHAR')
+        statements.append(
+            """
+            UPDATE scenario_responses sr
+            SET participant_variant = (
+                SELECT p.variant FROM participants p WHERE p.id = sr.participant_id
+            )
+            WHERE sr.participant_variant IS NULL
+            """
+        )
 
         if (
             "accepted_rewrite" in existing_columns
@@ -313,11 +315,71 @@ def _ensure_schema_columns() -> None:
                 """
             )
 
-    if "post_scenario_survey" in table_names and dialect == "postgresql":
+    if "participants" in table_names:
+        participant_columns = {col.get("name") for col in inspector.get_columns("participants")}
+        participant_types = {
+            col.get("name"): str(col.get("type", "")).lower()
+            for col in inspector.get_columns("participants")
+        }
+        if dialect == "postgresql" and "boolean" in participant_types.get("is_complete", ""):
+            statements.append(
+                """
+                ALTER TABLE participants
+                ALTER COLUMN is_complete TYPE VARCHAR
+                USING CASE
+                    WHEN is_complete IS TRUE THEN 'True'
+                    WHEN is_complete IS FALSE THEN 'False'
+                    ELSE 'Progress'
+                END
+                """
+            )
+        if "participant_variant" not in participant_columns:
+            statements.append('ALTER TABLE participants ADD COLUMN "participant_variant" VARCHAR')
+        statements.append(
+            """
+            UPDATE participants
+            SET is_complete = CASE
+                WHEN is_complete IS NULL THEN 'Progress'
+                WHEN lower(trim(CAST(is_complete AS TEXT))) IN ('true', 't', '1', '[v]') THEN 'True'
+                WHEN lower(trim(CAST(is_complete AS TEXT))) IN ('false', 'f', '0') THEN 'False'
+                WHEN lower(trim(CAST(is_complete AS TEXT))) IN ('progress', 'in progress', 'in_progress', 'none', 'null', '') THEN 'Progress'
+                ELSE 'Progress'
+            END
+            """
+        )
+        if dialect == "postgresql":
+            statements.append("ALTER TABLE participants ALTER COLUMN is_complete SET DEFAULT 'Progress'")
+            statements.append("ALTER TABLE participants ALTER COLUMN is_complete SET NOT NULL")
+        statements.append(
+            """
+            UPDATE participants
+            SET participant_variant = variant
+            WHERE participant_variant IS NULL
+            """
+        )
+
+    if "post_scenario_survey" in table_names:
+        pss_columns = {col.get("name") for col in inspector.get_columns("post_scenario_survey")}
         pss_types = {
             col.get("name"): str(col.get("type", "")).lower()
             for col in inspector.get_columns("post_scenario_survey")
         }
+        if "included_pii_types" not in pss_columns:
+            statements.append('ALTER TABLE post_scenario_survey ADD COLUMN "included_pii_types" TEXT')
+        if "included_pii_other_text" not in pss_columns:
+            statements.append('ALTER TABLE post_scenario_survey ADD COLUMN "included_pii_other_text" TEXT')
+        if "participant_variant" not in pss_columns:
+            statements.append('ALTER TABLE post_scenario_survey ADD COLUMN "participant_variant" VARCHAR')
+        statements.append(
+            """
+            UPDATE post_scenario_survey pss
+            SET participant_variant = (
+                SELECT p.variant FROM participants p WHERE p.id = pss.participant_id
+            )
+            WHERE pss.participant_variant IS NULL
+            """
+        )
+    if "post_scenario_survey" in table_names and dialect == "postgresql":
         for col_name in ("warning_clarity", "warning_helpful", "rewrite_quality"):
             if "integer" in pss_types.get(col_name, ""):
                 statements.append(
@@ -367,8 +429,19 @@ def _ensure_schema_columns() -> None:
             statements.append("ALTER TABLE llm_outputs ADD COLUMN input_tokens INTEGER")
         if "nth_call" not in llm_columns:
             statements.append("ALTER TABLE llm_outputs ADD COLUMN nth_call INTEGER")
+        if "participant_variant" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs ADD COLUMN participant_variant VARCHAR")
         if "cap_reached" in llm_columns:
             statements.append("ALTER TABLE llm_outputs DROP COLUMN IF EXISTS cap_reached")
+        statements.append(
+            """
+            UPDATE llm_outputs lo
+            SET participant_variant = (
+                SELECT p.variant FROM participants p WHERE p.id = lo.participant_id
+            )
+            WHERE lo.participant_variant IS NULL
+            """
+        )
 
         if dialect == "postgresql" and "llm_used" in llm_columns and "boolean" in llm_types.get("llm_used", ""):
             statements.append(
@@ -401,6 +474,39 @@ def _ensure_schema_columns() -> None:
                   AND lo.nth_call IS NULL
                 """
             )
+
+    for table_name in ("baseline_assessment", "sus_responses", "end_of_study_survey"):
+        if table_name not in table_names:
+            continue
+        table_columns = {col.get("name") for col in inspector.get_columns(table_name)}
+        if "participant_variant" not in table_columns:
+            statements.append(f'ALTER TABLE {table_name} ADD COLUMN "participant_variant" VARCHAR')
+        statements.append(
+            f"""
+            UPDATE {table_name} t
+            SET participant_variant = (
+                SELECT p.variant FROM participants p WHERE p.id = t.participant_id
+            )
+            WHERE t.participant_variant IS NULL
+            """
+        )
+
+    if "consent_decisions" in table_names:
+        consent_columns = {col.get("name") for col in inspector.get_columns("consent_decisions")}
+        if "participant_variant" not in consent_columns:
+            statements.append('ALTER TABLE consent_decisions ADD COLUMN "participant_variant" VARCHAR')
+        statements.append(
+            """
+            UPDATE consent_decisions cd
+            SET participant_variant = (
+                SELECT p.variant
+                FROM participants p
+                WHERE p.prolific_id = cd.participant_platform_id
+                LIMIT 1
+            )
+            WHERE cd.participant_variant IS NULL
+            """
+        )
 
     # Remove deprecated tables.
     statements.append("DROP TABLE IF EXISTS participant_scenario_llm_usage")

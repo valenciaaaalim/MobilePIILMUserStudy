@@ -209,6 +209,7 @@ def _persist_llm_output(
     db: Session,
     participant_id: int,
     scenario_id: int,
+    participant_variant: Optional[str],
     output_id: Optional[str],
     llm_used: Optional[str],
     total_tokens: Optional[int],
@@ -236,6 +237,8 @@ def _persist_llm_output(
             existing.input_tokens = input_tokens
         if nth_call is not None:
             existing.nth_call = nth_call
+        if participant_variant is not None:
+            existing.participant_variant = participant_variant
         if response_json is not None or error is not None:
             existing.response_json = response_json
         if error is not None:
@@ -255,6 +258,7 @@ def _persist_llm_output(
         nth_call=next_nth,
         response_json=response_json,
         error=error,
+        participant_variant=participant_variant,
     )
     db.add(row)
     db.commit()
@@ -534,12 +538,14 @@ def _process_risk_assessment_payload(request: Dict[str, Any]) -> Any:
 
     participant_id: Optional[int] = None
     participant_is_variant_a = False
+    participant_variant: Optional[str] = None
     db = _open_db_session()
     try:
         participant_id = _resolve_participant_id(db, request)
         participant_row = db.query(Participant).filter(Participant.id == participant_id).first()
         if participant_row is not None:
             participant_row = sync_participant_completion_state(db, participant_row, mark_active=True)
+            participant_variant = participant_row.variant
         participant_is_variant_a = _is_variant_a(db, participant_id)
     finally:
         db.close()
@@ -592,6 +598,7 @@ def _process_risk_assessment_payload(request: Dict[str, Any]) -> Any:
                 log_db,
                 participant_id=participant_id,
                 scenario_id=scenario_id,
+                participant_variant=participant_variant,
                 output_id=output_id,
                 llm_used=result.get("model"),
                 total_tokens=result.get("llm_total_tokens"),
@@ -624,8 +631,10 @@ def abort_risk(request: dict):
     try:
         participant_id = _resolve_participant_id(db, request)
         participant_row = db.query(Participant).filter(Participant.id == participant_id).first()
+        participant_variant: Optional[str] = None
         if participant_row is not None:
             participant_row = sync_participant_completion_state(db, participant_row, mark_active=True)
+            participant_variant = participant_row.variant
         if not _is_variant_a(db, participant_id):
             return {"status": "ignored", "reason": "variant_b"}
 
@@ -636,6 +645,7 @@ def abort_risk(request: dict):
             db,
             participant_id=participant_id,
             scenario_id=scenario_id,
+            participant_variant=participant_variant,
             output_id=output_id,
             llm_used=str(llm_used) if llm_used else None,
             total_tokens=None,

@@ -55,7 +55,8 @@ class ParticipantSchema(BaseModel):
     created_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     duration_seconds: Optional[float] = None
-    is_complete: Optional[bool] = None
+    is_complete: Optional[str] = None
+    participant_variant: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -104,6 +105,7 @@ class BaselineAssessmentResponse(BaseModel):
     familiar_scams: int
     contextual_judgment: int
     created_at: Optional[datetime] = None
+    participant_variant: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -117,10 +119,13 @@ class ScenarioResponseCreate(BaseModel):
     scenario_number: int = Field(..., ge=1, le=3)
     original_input: Optional[str] = None  # Text sent to LLM for assessment
     masked_text: Optional[str] = None  # PII-masked version
+    output_id: Optional[str] = None
+    input_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
     model: Optional[str] = None  # Actual model used for rewrite generation
-    suggested_rewrite: Optional[str] = None  # LLM suggested rewrite
-    reasoning: Optional[str] = None
     risk_level: Optional[str] = None
+    reasoning: Optional[str] = None
+    suggested_rewrite: Optional[str] = None  # LLM suggested rewrite
     primary_risk_factors: Optional[str] = None
     linkability_risk_level: Optional[str] = None
     linkability_risk_explanation: Optional[str] = None
@@ -140,10 +145,13 @@ class ScenarioResponseUpdate(BaseModel):
     """Scenario response update - for updating existing response."""
     original_input: Optional[str] = None
     masked_text: Optional[str] = None
+    output_id: Optional[str] = None
+    input_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
     model: Optional[str] = None
-    suggested_rewrite: Optional[str] = None
-    reasoning: Optional[str] = None
     risk_level: Optional[str] = None
+    reasoning: Optional[str] = None
+    suggested_rewrite: Optional[str] = None
     primary_risk_factors: Optional[str] = None
     linkability_risk_level: Optional[str] = None
     linkability_risk_explanation: Optional[str] = None
@@ -168,10 +176,13 @@ class ScenarioResponseSchema(BaseModel):
     scenario_number: int
     original_input: Optional[str]
     masked_text: Optional[str]
+    output_id: Optional[str]
+    input_tokens: Optional[int]
+    total_tokens: Optional[int]
     model: Optional[str]
-    suggested_rewrite: Optional[str]
-    reasoning: Optional[str]
     risk_level: Optional[str]
+    reasoning: Optional[str]
+    suggested_rewrite: Optional[str]
     primary_risk_factors: Optional[str]
     linkability_risk_level: Optional[str]
     linkability_risk_explanation: Optional[str]
@@ -188,6 +199,7 @@ class ScenarioResponseSchema(BaseModel):
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
     created_at: Optional[datetime] = None
+    participant_variant: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -202,6 +214,8 @@ class PostScenarioSurveyCreate(BaseModel):
     confidence_judgment: int = Field(..., ge=1, le=7)
     uncertainty_sharing: int = Field(..., ge=1, le=7)
     perceived_risk: int = Field(..., ge=1, le=7)
+    included_pii_types: List[str] = Field(default_factory=list)
+    included_pii_other_text: Optional[str] = None
     # Group A only (nullable)
     warning_clarity: Optional[Union[int, str]] = None
     warning_helpful: Optional[Union[int, str]] = None
@@ -216,10 +230,13 @@ class PostScenarioSurveySchema(BaseModel):
     confidence_judgment: int
     uncertainty_sharing: int
     perceived_risk: int
+    included_pii_types: Optional[str]
+    included_pii_other_text: Optional[str]
     warning_clarity: Optional[str]
     warning_helpful: Optional[str]
     rewrite_quality: Optional[str]
     created_at: Optional[datetime] = None
+    participant_variant: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -281,6 +298,7 @@ class SusResponseSchema(BaseModel):
     sus_10: int
     sus_score: Optional[float]
     created_at: Optional[datetime] = None
+    participant_variant: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -311,6 +329,7 @@ class EndOfStudySurveySchema(BaseModel):
     trust_system: Optional[str]
     trust_explanation: Optional[str]
     created_at: Optional[datetime] = None
+    participant_variant: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -349,6 +368,9 @@ class ScenarioMessageRecord(BaseModel):
     conversation_index: int  # 0, 1, 2 -> maps to scenario_number 1, 2, 3
     final_message: str
     accepted_rewrite: Optional[Union[bool, str]] = None  # true/false/null for A, "[B]" for B
+    output_id: Optional[str] = None
+    total_tokens: Optional[int] = None
+    input_tokens: Optional[int] = None
     model: Optional[str] = None  # Actual model used for this scenario's rewrite output
     variant: Optional[str] = None
     # Group A only: PII analysis fields

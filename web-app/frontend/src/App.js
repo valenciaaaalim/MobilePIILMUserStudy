@@ -74,18 +74,18 @@ const resolveProlificId = () => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function AnimatedLoading() {
-  const [loadingText, setLoadingText] = useState('Loading');
+function AnimatedLoading({ baseText = 'Loading' }) {
+  const [loadingText, setLoadingText] = useState(baseText);
 
   useEffect(() => {
-    const frames = ['Loading', 'Loading.', 'Loading..', 'Loading...'];
+    const frames = [baseText, `${baseText}.`, `${baseText}..`, `${baseText}...`];
     let index = 0;
     const interval = setInterval(() => {
       index = (index + 1) % frames.length;
       setLoadingText(frames[index]);
     }, 450);
     return () => clearInterval(interval);
-  }, []);
+  }, [baseText]);
 
   return <div className="loading">{loadingText}</div>;
 }
@@ -96,7 +96,7 @@ function ConversationRoute({ conversations, prolificId, variant, onComplete }) {
   const conversationIndex = parseInt(index || '0', 10);
   
   if (conversations.length === 0) {
-    return <div className="loading">Loading conversations...</div>;
+    return <AnimatedLoading baseText="Loading conversations" />;
   }
   
   if (conversationIndex >= conversations.length || conversationIndex < 0) {
@@ -160,7 +160,7 @@ function StudyGuard({ participantId }) {
   }
 
   if (checkingProgress || !progress) {
-    return <div className="loading">Checking progress...</div>;
+    return <AnimatedLoading baseText="Checking progress" />;
   }
 
   const allowedPaths = progress.allowed_paths?.length ? progress.allowed_paths : [progress.redirect_path];
@@ -316,7 +316,7 @@ function App() {
   }
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <AnimatedLoading />;
   }
 
   if (participantStatus === 'completed') {

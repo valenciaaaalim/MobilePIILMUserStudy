@@ -34,7 +34,11 @@ from app.schemas import (
     ParticipantProgressResponse,
 )
 from app.utils import ensure_singapore_tz, get_singapore_time
-from app.participant_state import sync_participant_completion_state
+from app.participant_state import (
+    sync_participant_completion_state,
+    is_completed_state,
+    COMPLETE_STATE_TRUE,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/participants", tags=["participant-data"])
@@ -178,7 +182,7 @@ def build_participant_progress_response(db: Session, participant: Participant) -
         ).all()
     }
 
-    if participant.is_complete or participant.completed_at is not None or end_of_study_exists:
+    if is_completed_state(participant.is_complete) or participant.completed_at is not None or end_of_study_exists:
         return ParticipantProgressResponse(
             is_complete=True,
             max_conversation_index_unlocked=2,
@@ -263,7 +267,8 @@ def create_baseline_assessment(
         recognize_sensitive=data.recognize_sensitive,
         avoid_accidental=data.avoid_accidental,
         familiar_scams=data.familiar_scams,
-        contextual_judgment=data.contextual_judgment
+        contextual_judgment=data.contextual_judgment,
+        participant_variant=participant.variant,
     )
     db.add(baseline)
     db.commit()
@@ -297,6 +302,9 @@ def create_or_update_scenario_response(
     variant_b = _is_variant_b(participant.variant)
     original_input_value = _variant_a_only_value(data.original_input, participant.variant)
     masked_text_value = _variant_a_only_value(data.masked_text, participant.variant)
+    output_id_value = _variant_a_only_value(data.output_id, participant.variant)
+    total_tokens_value = None if variant_b else data.total_tokens
+    input_tokens_value = None if variant_b else data.input_tokens
     model_value = _variant_a_only_value(data.model, participant.variant)
     suggested_rewrite_value = _variant_a_only_value(data.suggested_rewrite, participant.variant)
     risk_level_value = "[B]" if variant_b else data.risk_level
@@ -315,10 +323,18 @@ def create_or_update_scenario_response(
 
     if existing:
         # Update existing record
+        if existing.participant_variant is None:
+            existing.participant_variant = participant.variant
         if original_input_value is not None:
             existing.original_input = original_input_value
         if masked_text_value is not None:
             existing.masked_text = masked_text_value
+        if output_id_value is not None:
+            existing.output_id = output_id_value
+        if total_tokens_value is not None:
+            existing.total_tokens = total_tokens_value
+        if input_tokens_value is not None:
+            existing.input_tokens = input_tokens_value
         if model_value is not None:
             existing.model = model_value
         if suggested_rewrite_value is not None:
@@ -363,6 +379,9 @@ def create_or_update_scenario_response(
             scenario_number=data.scenario_number,
             original_input=original_input_value,
             masked_text=masked_text_value,
+            output_id=output_id_value,
+            total_tokens=total_tokens_value,
+            input_tokens=input_tokens_value,
             model=model_value,
             suggested_rewrite=suggested_rewrite_value,
             reasoning=reasoning_value,
@@ -379,7 +398,8 @@ def create_or_update_scenario_response(
             psychological_pressure_level=psychological_pressure_level_value,
             psychological_pressure_explanation=psychological_pressure_explanation_value,
             final_message=data.final_message,
-            accepted_rewrite=accepted_rewrite_value
+            accepted_rewrite=accepted_rewrite_value,
+            participant_variant=participant.variant,
         )
         db.add(scenario_response)
         db.commit()
@@ -412,7 +432,7 @@ def record_scenario_message(
             detail={"message": "Step out of sequence", "redirect_path": progress.redirect_path},
         )
 
-    if participant.is_complete:
+    if is_completed_state(participant.is_complete):
         raise HTTPException(status_code=409, detail="Participant already completed")
 
     scenario_survey_exists = db.query(PostScenarioSurvey.id).filter(
@@ -443,6 +463,9 @@ def record_scenario_message(
     original_input_value = _variant_a_only_value(data.original_input, participant_variant)
     masked_text_value = _variant_a_only_value(data.final_masked_text, participant_variant)
     rewrite_text_value = _variant_a_only_value(data.final_rewrite_text, participant_variant)
+    output_id_value = _variant_a_only_value(data.output_id, participant_variant)
+    total_tokens_value = None if variant_b else data.total_tokens
+    input_tokens_value = None if variant_b else data.input_tokens
     risk_level_value = "[B]" if variant_b else data.risk_level
     reasoning_value = "[B]" if variant_b else data.reasoning
     primary_risk_factors_value = "[B]" if variant_b else (
@@ -461,6 +484,8 @@ def record_scenario_message(
 
     if existing:
         # Update existing record
+        if existing.participant_variant is None:
+            existing.participant_variant = participant_variant
         existing.final_message = data.final_message
         existing.completed_at = completion_time
         if original_input_value is not None:
@@ -469,6 +494,12 @@ def record_scenario_message(
             existing.masked_text = masked_text_value
         if rewrite_text_value is not None:
             existing.suggested_rewrite = rewrite_text_value
+        if output_id_value is not None:
+            existing.output_id = output_id_value
+        if total_tokens_value is not None:
+            existing.total_tokens = total_tokens_value
+        if input_tokens_value is not None:
+            existing.input_tokens = input_tokens_value
         if scenario_model is not None:
             existing.model = scenario_model
 
@@ -513,6 +544,9 @@ def record_scenario_message(
             scenario_number=scenario_number,
             original_input=original_input_value,
             masked_text=masked_text_value,
+            output_id=output_id_value,
+            total_tokens=total_tokens_value,
+            input_tokens=input_tokens_value,
             model=scenario_model,
             suggested_rewrite=rewrite_text_value,
             reasoning=reasoning_value,
@@ -531,6 +565,7 @@ def record_scenario_message(
             final_message=data.final_message,
             accepted_rewrite=accepted_rewrite_value,
             completed_at=completion_time,
+            participant_variant=participant_variant,
         )
         db.add(scenario_response)
         logger.info(f"[DB] Created scenario_response for participant {participant.id}, scenario {scenario_number}")
@@ -569,6 +604,9 @@ def create_post_scenario_survey(
     ).first()
     if existing:
         raise HTTPException(status_code=409, detail="Post-scenario survey already exists for this scenario")
+
+    included_pii_types_value = json.dumps(data.included_pii_types or [], ensure_ascii=True)
+    included_pii_other_text_value = (data.included_pii_other_text or "").strip() or None
     variant_b = _is_variant_b(participant.variant)
     warning_clarity_value = "[B]" if variant_b else (str(data.warning_clarity) if data.warning_clarity is not None else None)
     warning_helpful_value = "[B]" if variant_b else (str(data.warning_helpful) if data.warning_helpful is not None else None)
@@ -580,9 +618,12 @@ def create_post_scenario_survey(
         confidence_judgment=data.confidence_judgment,
         uncertainty_sharing=data.uncertainty_sharing,
         perceived_risk=data.perceived_risk,
+        included_pii_types=included_pii_types_value,
+        included_pii_other_text=included_pii_other_text_value,
         warning_clarity=warning_clarity_value,
         warning_helpful=warning_helpful_value,
-        rewrite_quality=rewrite_quality_value
+        rewrite_quality=rewrite_quality_value,
+        participant_variant=participant.variant,
     )
     db.add(post_survey)
     db.commit()
@@ -638,7 +679,8 @@ def create_sus_responses(
         sus_8=data.sus_8,
         sus_9=data.sus_9,
         sus_10=data.sus_10,
-        sus_score=sus_score
+        sus_score=sus_score,
+        participant_variant=participant.variant,
     )
     db.add(sus_response)
     db.commit()
@@ -683,12 +725,13 @@ def create_end_of_study_survey(
         overall_confidence=data.overall_confidence,
         sharing_rationale=data.sharing_rationale,
         trust_system=trust_system_value,
-        trust_explanation=trust_explanation_value
+        trust_explanation=trust_explanation_value,
+        participant_variant=participant.variant,
     )
     db.add(end_survey)
     
     # Mark participant as complete
-    participant.is_complete = True
+    participant.is_complete = COMPLETE_STATE_TRUE
     completion_time = get_singapore_time().replace(microsecond=0)
     if participant.completed_at is None:
         participant.completed_at = completion_time

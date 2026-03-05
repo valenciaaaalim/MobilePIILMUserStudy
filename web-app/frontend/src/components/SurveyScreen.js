@@ -67,6 +67,7 @@ const POST_SCENARIO_COMMON_QUESTIONS = [
     question: 'Which type(s) of personal information did you include in your reply?',
     type: 'checkbox',
     options: [
+      'Name',
       'Phone number',
       'Home address',
       'Email address',
@@ -477,6 +478,10 @@ function SurveyScreen({ participantId, participantProlificId, variant }) {
             confidence_judgment: parseInt(responses['post_scenario_confidence']),
             uncertainty_sharing: parseInt(responses['post_scenario_uncertainty']),
             perceived_risk: parseInt(responses['post_scenario_risk']),
+            included_pii_types: responses['post_scenario_pii'] || [],
+            included_pii_other_text: (responses['post_scenario_pii'] || []).includes('Other')
+              ? (otherText || '').trim()
+              : null,
             // Group A only fields (nullable)
             warning_clarity: variant === 'A' ? parseInt(responses['post_scenario_warning_clarity']) : null,
             warning_helpful: variant === 'A' ? parseInt(responses['post_scenario_warning_helpful']) : null,

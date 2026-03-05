@@ -120,6 +120,13 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     }));
 
     let cancelled = false;
+    if (variant !== 'A') {
+      setMaskedHistory(historyForMasking);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const separator = '\n<<<MSG_SEPARATOR>>>\n';
     const serializedHistory = historyForMasking.map((m) => m.text || '').join(separator);
     axios.post(
@@ -150,7 +157,7 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     return () => {
       cancelled = true;
     };
-  }, [conversation, conversationIndex]);
+  }, [conversation, conversationIndex, variant]);
 
   const handleToggleDrawer = () => {
     setIsDrawerOpen((open) => !open);
@@ -418,6 +425,13 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
         reasoning: toSingleLineReasoning(
           response.data.reasoning || response.data.output_2?.reasoning || ''
         ),
+        outputId: response.data.output_id || null,
+        totalTokens: Number.isFinite(Number(response.data.total_tokens))
+          ? Number(response.data.total_tokens)
+          : null,
+        inputTokens: Number.isFinite(Number(response.data.input_tokens))
+          ? Number(response.data.input_tokens)
+          : null,
         model: response.data.model || null,
         // Persist the exact text and masking used at alert-time.
         analysisInput: textToUse,
@@ -586,6 +600,11 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
           messagePayload.final_rewrite_text = 'ABORT';
         } else if (finalRewriteText) {
           messagePayload.final_rewrite_text = finalRewriteText;
+        }
+        if (!isAbortSubmit) {
+          messagePayload.output_id = analysis?.outputId ?? null;
+          messagePayload.total_tokens = analysis?.totalTokens ?? null;
+          messagePayload.input_tokens = analysis?.inputTokens ?? null;
         }
       }
 

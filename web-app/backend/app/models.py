@@ -2,7 +2,7 @@
 Database models for the web app.
 Normalized schema for user study data.
 """
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, UniqueConstraint, Numeric
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float, UniqueConstraint, Numeric
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -29,7 +29,8 @@ class Participant(Base):
     created_at = Column(DateTime(timezone=True), default=get_singapore_time)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     duration_seconds = Column(Float, nullable=True)  # Duration of study in seconds
-    is_complete = Column(Boolean, nullable=True, default=None)  # True=completed, False=inactive >3d, None=incomplete active
+    is_complete = Column(String, nullable=False, default="Progress")  # Progress | True | False
+    participant_variant = Column(String, nullable=True)  # Mirror of variant for analytics exports
     
     # Relationships to normalized tables
     baseline_assessment = relationship("BaselineAssessment", back_populates="participant", uselist=False, cascade="all, delete-orphan")
@@ -50,6 +51,7 @@ class ConsentDecision(Base):
     participant_platform_id = Column(String, nullable=True, index=True)
     consent = Column(String, nullable=False)  # 'yes' or 'no'
     timestamp_utc = Column(DateTime(timezone=True), nullable=False)
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
 
 
 # =============================================================================
@@ -66,6 +68,7 @@ class BaselineAssessment(Base):
     familiar_scams = Column(Integer, nullable=False)  # Likert 1-7
     contextual_judgment = Column(Integer, nullable=False)  # Likert 1-7
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
     
     # Relationships
     participant = relationship("Participant", back_populates="baseline_assessment")
@@ -86,9 +89,12 @@ class ScenarioResponse(Base):
     scenario_number = Column(Integer, nullable=False)  # 1, 2, or 3
     original_input = Column(Text, nullable=True)  # Text sent to LLM for assessment
     masked_text = Column(Text, nullable=True)  # PII-masked version
-    risk_level = Column(String, nullable=True)  # Output_2 Risk_Level
-    reasoning = Column("Reasoning", Text, nullable=True)  # Output_2 Reasoning
+    output_id = Column(String, nullable=True)  # LLM output id captured during alert assessment
+    total_tokens = Column(Integer, nullable=True)  # Total tokens used for final assessed output
+    input_tokens = Column(Integer, nullable=True)  # Input tokens used for final assessed output
     model = Column(String, nullable=True)  # Actual model used for rewrite generation
+    risk_level = Column(String, nullable=True)  # Output_2 Risk_Level
+    reasoning = Column(Text, nullable=True)  # Output_2 reasoning
     suggested_rewrite = Column(Text, nullable=True)  # Suggested safer rewrite from LLM
     final_message = Column(Text, nullable=True)  # Final message sent by user
     primary_risk_factors = Column(Text, nullable=True)  # JSON array from Output_2 Primary_Risk_Factors
@@ -106,6 +112,7 @@ class ScenarioResponse(Base):
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
     
     # Relationships
     participant = relationship("Participant", back_populates="scenario_responses")
@@ -128,11 +135,14 @@ class PostScenarioSurvey(Base):
     confidence_judgment = Column(Integer, nullable=False)
     uncertainty_sharing = Column(Integer, nullable=False)
     perceived_risk = Column(Integer, nullable=False)
+    included_pii_types = Column(Text, nullable=True)  # JSON array of selected personal-info types
+    included_pii_other_text = Column(Text, nullable=True)  # Free-text for "Other"
     # Group A only (stored as text so variant B marker "[B]" can be persisted)
     warning_clarity = Column(String, nullable=True)
     warning_helpful = Column(String, nullable=True)
     rewrite_quality = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
     
     # Relationships
     participant = relationship("Participant", back_populates="post_scenario_surveys")
@@ -159,6 +169,7 @@ class SusResponse(Base):
     sus_10 = Column(Integer, nullable=False)  # 1-5
     sus_score = Column(Numeric(5, 2), nullable=True)  # Calculated SUS score (0-100)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
     
     # Relationships
     participant = relationship("Participant", back_populates="sus_responses")
@@ -182,6 +193,7 @@ class EndOfStudySurvey(Base):
     trust_system = Column(String, nullable=True)  # Likert 1-7 or "[B]"
     trust_explanation = Column(Text, nullable=True)  # Free text
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
     
     # Relationships
     participant = relationship("Participant", back_populates="end_of_study_survey")
@@ -205,3 +217,4 @@ class LLMOutput(Base):
     nth_call = Column(Integer, nullable=True)
     response_json = Column(JSONB, nullable=True)
     error = Column(Text, nullable=True)
+    participant_variant = Column(String, nullable=True)  # Snapshot variant marker (A/B)
