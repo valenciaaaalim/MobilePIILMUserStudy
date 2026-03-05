@@ -1,6 +1,6 @@
 """
 Database setup and session management.
-Normalized schema with 7 tables.
+Normalized schema and database utilities.
 """
 import logging
 import os
@@ -57,11 +57,10 @@ def get_db_dialect() -> str:
 
 def _ensure_participant_views() -> None:
     """
-    Create convenience views that expose participant identifiers alongside
-    normalized response rows.
+    Create participant convenience views split by variant.
     """
     view_defs = {
-        "v_baseline_assessment": """
+        "v_baseline_assessment_A": """
             SELECT
                 ba.id,
                 ba.participant_id,
@@ -73,8 +72,9 @@ def _ensure_participant_views() -> None:
                 p.variant AS participant_variant
             FROM baseline_assessment ba
             JOIN participants p ON p.id = ba.participant_id
+            WHERE p.variant = 'A'
         """,
-        "v_scenario_responses": """
+        "v_scenario_responses_A": """
             SELECT
                 sr.id,
                 sr.participant_id,
@@ -84,6 +84,12 @@ def _ensure_participant_views() -> None:
                 sr.risk_level,
                 sr."Reasoning",
                 sr.model,
+                COALESCE((
+                    SELECT MAX(lo.nth_call)
+                    FROM llm_outputs lo
+                    WHERE lo.participant_id = sr.participant_id
+                      AND lo.scenario_id = sr.scenario_number
+                ), 0) AS scenario_llm_usage,
                 sr.suggested_rewrite,
                 sr.final_message,
                 sr.primary_risk_factors,
@@ -103,8 +109,9 @@ def _ensure_participant_views() -> None:
                 p.variant AS participant_variant
             FROM scenario_responses sr
             JOIN participants p ON p.id = sr.participant_id
+            WHERE p.variant = 'A'
         """,
-        "v_post_scenario_survey": """
+        "v_post_scenario_survey_A": """
             SELECT
                 pss.id,
                 pss.participant_id,
@@ -119,20 +126,25 @@ def _ensure_participant_views() -> None:
                 p.variant AS participant_variant
             FROM post_scenario_survey pss
             JOIN participants p ON p.id = pss.participant_id
+            WHERE p.variant = 'A'
         """,
-        "v_pii_disclosure": """
+        "v_end_of_study_survey_A": """
             SELECT
-                pd.id,
-                pd.participant_id,
-                pd.scenario_number,
-                pd.pii_type,
-                pd.other_specified,
+                eos.id,
+                eos.participant_id,
+                eos.tasks_realistic,
+                eos.realism_explanation,
+                eos.overall_confidence,
+                eos.sharing_rationale,
+                eos.trust_system,
+                eos.trust_explanation,
                 p.prolific_id AS participant_prolific_id,
                 p.variant AS participant_variant
-            FROM pii_disclosure pd
-            JOIN participants p ON p.id = pd.participant_id
+            FROM end_of_study_survey eos
+            JOIN participants p ON p.id = eos.participant_id
+            WHERE p.variant = 'A'
         """,
-        "v_sus_responses": """
+        "v_sus_responses_A": """
             SELECT
                 sus.id,
                 sus.participant_id,
@@ -151,8 +163,72 @@ def _ensure_participant_views() -> None:
                 p.variant AS participant_variant
             FROM sus_responses sus
             JOIN participants p ON p.id = sus.participant_id
+            WHERE p.variant = 'A'
         """,
-        "v_end_of_study_survey": """
+        "v_baseline_assessment_B": """
+            SELECT
+                ba.id,
+                ba.participant_id,
+                ba.recognize_sensitive,
+                ba.avoid_accidental,
+                ba.familiar_scams,
+                ba.contextual_judgment,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
+            FROM baseline_assessment ba
+            JOIN participants p ON p.id = ba.participant_id
+            WHERE p.variant = 'B'
+        """,
+        "v_scenario_responses_B": """
+            SELECT
+                sr.id,
+                sr.participant_id,
+                sr.scenario_number,
+                sr.original_input,
+                sr.masked_text,
+                sr.risk_level,
+                sr."Reasoning",
+                sr.model,
+                '[B]' AS scenario_llm_usage,
+                sr.suggested_rewrite,
+                sr.final_message,
+                sr.primary_risk_factors,
+                sr.linkability_risk_level,
+                sr.linkability_risk_explanation,
+                sr.authentication_baiting_level,
+                sr.authentication_baiting_explanation,
+                sr.contextual_alignment_level,
+                sr.contextual_alignment_explanation,
+                sr.platform_trust_obligation_level,
+                sr.platform_trust_obligation_explanation,
+                sr.psychological_pressure_level,
+                sr.psychological_pressure_explanation,
+                sr.accepted_rewrite,
+                sr.completed_at,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
+            FROM scenario_responses sr
+            JOIN participants p ON p.id = sr.participant_id
+            WHERE p.variant = 'B'
+        """,
+        "v_post_scenario_survey_B": """
+            SELECT
+                pss.id,
+                pss.participant_id,
+                pss.scenario_number,
+                pss.confidence_judgment,
+                pss.uncertainty_sharing,
+                pss.perceived_risk,
+                pss.warning_clarity,
+                pss.warning_helpful,
+                pss.rewrite_quality,
+                p.prolific_id AS participant_prolific_id,
+                p.variant AS participant_variant
+            FROM post_scenario_survey pss
+            JOIN participants p ON p.id = pss.participant_id
+            WHERE p.variant = 'B'
+        """,
+        "v_end_of_study_survey_B": """
             SELECT
                 eos.id,
                 eos.participant_id,
@@ -166,33 +242,174 @@ def _ensure_participant_views() -> None:
                 p.variant AS participant_variant
             FROM end_of_study_survey eos
             JOIN participants p ON p.id = eos.participant_id
+            WHERE p.variant = 'B'
         """,
     }
     db_engine = require_db()
+    legacy_views = [
+        "v_baseline_assessment",
+        "v_scenario_responses",
+        "v_post_scenario_survey",
+        "v_pii_disclosure",
+        "v_sus_responses",
+        "v_end_of_study_survey",
+        "v_participant_llm_usage",
+        "v_participant_scenario_llm_usage",
+        "v_llm_outputs",
+    ]
     with db_engine.begin() as conn:
+        for legacy in legacy_views:
+            conn.execute(text(f"DROP VIEW IF EXISTS {legacy}"))
         for view_name, select_sql in view_defs.items():
             conn.execute(text(f"DROP VIEW IF EXISTS {view_name}"))
             conn.execute(text(f"CREATE VIEW {view_name} AS {select_sql}"))
 
 
 def _ensure_schema_columns() -> None:
-    """Add backward-compatible columns for existing databases."""
+    """Apply backward-compatible schema changes and remove deprecated tables."""
     db_engine = require_db()
     inspector = inspect(db_engine)
-
-    if "scenario_responses" not in inspector.get_table_names():
-        return
-
-    existing_columns = {col.get("name") for col in inspector.get_columns("scenario_responses")}
+    table_names = set(inspector.get_table_names())
+    dialect = db_engine.dialect.name
     statements = []
 
-    if "model" not in existing_columns:
-        statements.append('ALTER TABLE scenario_responses ADD COLUMN "model" VARCHAR')
+    # Drop legacy views that may depend on deprecated tables/columns.
+    drop_view_statements = [
+        "DROP VIEW IF EXISTS v_baseline_assessment",
+        "DROP VIEW IF EXISTS v_scenario_responses",
+        "DROP VIEW IF EXISTS v_post_scenario_survey",
+        "DROP VIEW IF EXISTS v_pii_disclosure",
+        "DROP VIEW IF EXISTS v_sus_responses",
+        "DROP VIEW IF EXISTS v_end_of_study_survey",
+        "DROP VIEW IF EXISTS v_participant_llm_usage",
+        "DROP VIEW IF EXISTS v_participant_scenario_llm_usage",
+        "DROP VIEW IF EXISTS v_llm_outputs",
+    ]
 
-    if not statements:
-        return
+    if "scenario_responses" in table_names:
+        existing_columns = {col.get("name") for col in inspector.get_columns("scenario_responses")}
+        existing_column_types = {
+            col.get("name"): str(col.get("type", "")).lower()
+            for col in inspector.get_columns("scenario_responses")
+        }
+
+        if "model" not in existing_columns:
+            statements.append('ALTER TABLE scenario_responses ADD COLUMN "model" VARCHAR')
+
+        if (
+            "accepted_rewrite" in existing_columns
+            and "boolean" in existing_column_types.get("accepted_rewrite", "")
+            and dialect == "postgresql"
+        ):
+            statements.append(
+                """
+                ALTER TABLE scenario_responses
+                ALTER COLUMN accepted_rewrite TYPE VARCHAR
+                USING CASE
+                    WHEN accepted_rewrite IS TRUE THEN 'true'
+                    WHEN accepted_rewrite IS FALSE THEN 'false'
+                    ELSE NULL
+                END
+                """
+            )
+
+    if "post_scenario_survey" in table_names and dialect == "postgresql":
+        pss_types = {
+            col.get("name"): str(col.get("type", "")).lower()
+            for col in inspector.get_columns("post_scenario_survey")
+        }
+        for col_name in ("warning_clarity", "warning_helpful", "rewrite_quality"):
+            if "integer" in pss_types.get(col_name, ""):
+                statements.append(
+                    f"""
+                    ALTER TABLE post_scenario_survey
+                    ALTER COLUMN {col_name} TYPE VARCHAR
+                    USING CASE
+                        WHEN {col_name} IS NULL THEN NULL
+                        ELSE {col_name}::text
+                    END
+                    """
+                )
+
+    if "end_of_study_survey" in table_names and dialect == "postgresql":
+        eos_types = {
+            col.get("name"): str(col.get("type", "")).lower()
+            for col in inspector.get_columns("end_of_study_survey")
+        }
+        if "integer" in eos_types.get("trust_system", ""):
+            statements.append(
+                """
+                ALTER TABLE end_of_study_survey
+                ALTER COLUMN trust_system TYPE VARCHAR
+                USING CASE
+                    WHEN trust_system IS NULL THEN NULL
+                    ELSE trust_system::text
+                END
+                """
+            )
+
+    if "llm_outputs" in table_names:
+        llm_columns = {col.get("name") for col in inspector.get_columns("llm_outputs")}
+        llm_types = {
+            col.get("name"): str(col.get("type", "")).lower()
+            for col in inspector.get_columns("llm_outputs")
+        }
+
+        if "created_at" in llm_columns and "called_at" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs RENAME COLUMN created_at TO called_at")
+        if "error_text" in llm_columns and "error" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs RENAME COLUMN error_text TO error")
+        if "output_id" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs ADD COLUMN output_id VARCHAR")
+        if "total_tokens" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs ADD COLUMN total_tokens INTEGER")
+        if "input_tokens" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs ADD COLUMN input_tokens INTEGER")
+        if "nth_call" not in llm_columns:
+            statements.append("ALTER TABLE llm_outputs ADD COLUMN nth_call INTEGER")
+        if "cap_reached" in llm_columns:
+            statements.append("ALTER TABLE llm_outputs DROP COLUMN IF EXISTS cap_reached")
+
+        if dialect == "postgresql" and "llm_used" in llm_columns and "boolean" in llm_types.get("llm_used", ""):
+            statements.append(
+                """
+                ALTER TABLE llm_outputs
+                ALTER COLUMN llm_used TYPE VARCHAR
+                USING CASE
+                    WHEN llm_used IS TRUE THEN 'true'
+                    WHEN llm_used IS FALSE THEN 'false'
+                    ELSE NULL
+                END
+                """
+            )
+        if dialect == "postgresql":
+            statements.append(
+                """
+                WITH ranked AS (
+                    SELECT
+                        id,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY participant_id, scenario_id
+                            ORDER BY called_at, id
+                        ) AS seq
+                    FROM llm_outputs
+                )
+                UPDATE llm_outputs lo
+                SET nth_call = ranked.seq
+                FROM ranked
+                WHERE lo.id = ranked.id
+                  AND lo.nth_call IS NULL
+                """
+            )
+
+    # Remove deprecated tables.
+    statements.append("DROP TABLE IF EXISTS participant_scenario_llm_usage")
+    statements.append("DROP TABLE IF EXISTS participant_llm_usage")
+    statements.append("DROP TABLE IF EXISTS pii_disclosure")
 
     with db_engine.begin() as conn:
+        for stmt in drop_view_statements:
+            conn.execute(text(stmt))
         for stmt in statements:
             conn.execute(text(stmt))
 
@@ -211,14 +428,14 @@ def init_db() -> None:
     """
     Initialize database tables.
     Creates the normalized tables:
-    1. consent_decisions
-    2. participants
+    1. participants
+    2. consent_decisions
     3. baseline_assessment
     4. scenario_responses
-    5. post_scenario_survey
-    6. pii_disclosure
-    7. sus_responses
-    8. end_of_study_survey
+    5. llm_outputs
+    6. post_scenario_survey
+    7. end_of_study_survey
+    8. sus_responses
     """
     if engine is None:
         logger.warning("Skipping DB initialization because database is not configured.")
@@ -228,6 +445,12 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_schema_columns()
     _ensure_participant_views()
+    from app.participant_state import sync_all_participant_completion_states
+    db = SessionLocal(bind=engine)
+    try:
+        sync_all_participant_completion_states(db)
+    finally:
+        db.close()
     logger.info("Database tables initialized")
 
 
@@ -239,6 +462,8 @@ def reset_db() -> None:
     db_engine = require_db()
     Base.metadata.drop_all(bind=db_engine)
     Base.metadata.create_all(bind=db_engine)
+    _ensure_schema_columns()
+    _ensure_participant_views()
     logger.info("Database reset - all tables dropped and recreated")
 
 
@@ -249,7 +474,21 @@ def get_table_info() -> dict:
     try:
         inspector = inspect(db_engine)
         with db_engine.connect() as conn:
-            for table_name in inspector.get_table_names():
+            discovered = inspector.get_table_names()
+            preferred_order = [
+                "participants",
+                "consent_decisions",
+                "baseline_assessment",
+                "scenario_responses",
+                "llm_outputs",
+                "post_scenario_survey",
+                "end_of_study_survey",
+                "sus_responses",
+            ]
+            ordered_tables = [name for name in preferred_order if name in discovered]
+            ordered_tables.extend([name for name in discovered if name not in preferred_order])
+
+            for table_name in ordered_tables:
                 columns_meta = inspector.get_columns(table_name)
                 columns = [
                     {

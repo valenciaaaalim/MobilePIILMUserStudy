@@ -7,7 +7,17 @@ const INPUT_MIN_HEIGHT_PX = INPUT_LINE_HEIGHT_PX + INPUT_VERTICAL_PADDING_PX;
 const INPUT_MAX_LINES = 5;
 const INPUT_MAX_HEIGHT_PX = (INPUT_LINE_HEIGHT_PX * INPUT_MAX_LINES) + INPUT_VERTICAL_PADDING_PX;
 
-function ChatComposer({ draftText, onTextChange, onSend, variant, piiSpans = [], onPiiClick, isSending }) {
+function ChatComposer({
+  draftText,
+  onTextChange,
+  onSend,
+  variant,
+  piiSpans = [],
+  onPiiClick,
+  isSending,
+  sendDisabled = false,
+  inputDisabled = false
+}) {
   const textareaRef = useRef(null);
   const overlayRef = useRef(null);
   const piiBubbleRef = useRef(null);
@@ -49,7 +59,7 @@ function ChatComposer({ draftText, onTextChange, onSend, variant, piiSpans = [],
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      if (isSending || e.repeat) {
+      if (isSending || sendDisabled || e.repeat) {
         return;
       }
       onSend();
@@ -184,13 +194,13 @@ function ChatComposer({ draftText, onTextChange, onSend, variant, piiSpans = [],
             onScroll={handleScroll}
             onClick={handleInputClick}
             rows={1}
-            disabled={isSending}
+            disabled={isSending || inputDisabled}
           />
         </div>
         <button
           className="send-button"
           onClick={onSend}
-          disabled={isSending || !draftText.trim()}
+          disabled={isSending || sendDisabled || !draftText.trim()}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path

@@ -72,6 +72,12 @@ class Settings:
         or "1"
     )
     GEMINI_INCLUDE_THOUGHTS: bool = _env_bool("GEMINI_INCLUDE_THOUGHTS", True)
+
+    # Frontend GLiNER typing debounce (milliseconds), served via backend config endpoint.
+    GLINER_DEBOUNCE_MS: int = int(
+        _clean_env(os.getenv("GLINER_DEBOUNCE_MS"))
+        or "400"
+    )
     
     # Server settings
     HOST: str = os.getenv("HOST", "0.0.0.0")

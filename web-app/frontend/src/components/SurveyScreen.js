@@ -469,7 +469,6 @@ function SurveyScreen({ participantId, participantProlificId, variant }) {
       } else if (surveyType === 'mid' || surveyType === 'post-scenario') {
         // Post-Scenario Survey
         const convIndex = parseInt(conversationIndex || '0', 10) + 1; // 1-indexed
-        const piiSelections = responses['post_scenario_pii'] || [];
         
         // Submit common questions
         await postSurvey(
@@ -485,41 +484,6 @@ function SurveyScreen({ participantId, participantProlificId, variant }) {
           }),
           'Post-scenario survey'
         );
-
-        // Submit PII disclosure checkboxes
-        for (const piiType of piiSelections) {
-          if (piiType === 'Other') {
-            await postSurvey(
-              () => axios.post(`${API_BASE_URL}/api/participants/${participantId}/pii-disclosure`, {
-                scenario_number: convIndex,
-                pii_type: 'other',
-                other_specified: otherText.trim() || null
-              }),
-              'PII disclosure (other)'
-            );
-          } else {
-            // Map frontend labels to database enum values
-            const piiTypeMap = {
-              'No personal information was disclosed': 'none_disclosed',
-              'Name': 'name',
-              'Phone number': 'phone_number',
-              'Home address': 'home_address',
-              'Email address': 'email_address',
-              'Date of birth': 'date_of_birth',
-              'Workplace or professional affiliation': 'workplace',
-              'Government-issued ID number': 'government_id',
-              'Financial information (e.g. bank details, salary)': 'financial_info'
-            };
-            await postSurvey(
-              () => axios.post(`${API_BASE_URL}/api/participants/${participantId}/pii-disclosure`, {
-                scenario_number: convIndex,
-                pii_type: piiTypeMap[piiType] || piiType.toLowerCase().replace(/\s+/g, '_'),
-                other_specified: null
-              }),
-              'PII disclosure'
-            );
-          }
-        }
       } else if (surveyType === 'post' || surveyType === 'end-of-study') {
         // End-of-Study Survey
         if (variant === 'A') {

@@ -323,6 +323,7 @@ class RiskAssessmentService:
             logger.info("Calling LLM API for risk assessment")
             risk_result = self.llm.generate_json_content(first_prompt)
             model_used = self.llm.get_last_model_used() if hasattr(self.llm, "get_last_model_used") else None
+            usage_metadata = self.llm.get_last_usage_metadata() if hasattr(self.llm, "get_last_usage_metadata") else {}
             normalized_result = self._normalize_risk_payload(
                 risk_result if isinstance(risk_result, dict) else {}
             )
@@ -380,6 +381,9 @@ class RiskAssessmentService:
                 "reasoning": reasoning,
                 "primary_risk_factors": primary_risk_factors,
                 "model": model_used,
+                "llm_output_id": usage_metadata.get("output_id") if isinstance(usage_metadata, dict) else None,
+                "llm_total_tokens": usage_metadata.get("total_tokens") if isinstance(usage_metadata, dict) else None,
+                "llm_input_tokens": usage_metadata.get("input_tokens") if isinstance(usage_metadata, dict) else None,
                 "output_1": {
                     "linkability_risk": {
                         "level": self._get_value(linkability_risk, ["Level", "level"], ""),
@@ -414,6 +418,7 @@ class RiskAssessmentService:
         except Exception as e:
             logger.error(f"Risk assessment error: {e}", exc_info=True)
             model_used = self.llm.get_last_model_used() if hasattr(self.llm, "get_last_model_used") else None
+            usage_metadata = self.llm.get_last_usage_metadata() if hasattr(self.llm, "get_last_usage_metadata") else {}
             # Keep warning flow active when PII was already detected, even if LLM is unavailable.
             fallback_rewrite = self._fallback_conversational_rewrite(draft_text=draft_text, masked_draft=masked_draft)
             fallback_risk = "MODERATE" if masked_draft else "LOW"
@@ -455,6 +460,9 @@ class RiskAssessmentService:
                 "primary_risk_factors": [],
                 "reasoning": fallback_reasoning,
                 "model": model_used,
+                "llm_output_id": usage_metadata.get("output_id") if isinstance(usage_metadata, dict) else None,
+                "llm_total_tokens": usage_metadata.get("total_tokens") if isinstance(usage_metadata, dict) else None,
+                "llm_input_tokens": usage_metadata.get("input_tokens") if isinstance(usage_metadata, dict) else None,
                 "output_1": fallback_output_1,
                 "output_2": fallback_output_2,
                 "error": str(e)

@@ -132,6 +132,11 @@ class GeminiService:
         self.api_version = "v1beta"
         self._last_thought_summaries: List[str] = []
         self._last_model_used: Optional[str] = None
+        self._last_usage_metadata: Dict[str, Optional[int | str]] = {
+            "output_id": None,
+            "total_tokens": None,
+            "input_tokens": None,
+        }
 
     def _build_prompt_text(
         self,
@@ -262,6 +267,7 @@ class GeminiService:
                     logger.info("[LLM] Thought summaries captured: %d", len(self._last_thought_summaries))
 
                 self._last_model_used = model_name
+                self._last_usage_metadata = self._extract_usage_metadata(response)
                 return self._extract_text(response)
             except Exception as e:
                 status = self._resolve_status_code(e)
@@ -348,6 +354,34 @@ class GeminiService:
         """Return model id used by the most recent successful request."""
         return self._last_model_used
 
+    def get_last_usage_metadata(self) -> Dict[str, Optional[int | str]]:
+        """Return output id and token usage from the most recent successful request."""
+        return dict(self._last_usage_metadata)
+
+    def _extract_usage_metadata(self, response: Any) -> Dict[str, Optional[int | str]]:
+        if not isinstance(response, dict):
+            return {"output_id": None, "total_tokens": None, "input_tokens": None}
+
+        usage = response.get("usageMetadata", {}) or {}
+        total_tokens = usage.get("totalTokenCount")
+        input_tokens = usage.get("promptTokenCount")
+        output_id = response.get("responseId") or response.get("response_id")
+
+        try:
+            total_tokens = int(total_tokens) if total_tokens is not None else None
+        except (TypeError, ValueError):
+            total_tokens = None
+        try:
+            input_tokens = int(input_tokens) if input_tokens is not None else None
+        except (TypeError, ValueError):
+            input_tokens = None
+
+        return {
+            "output_id": str(output_id) if output_id is not None else None,
+            "total_tokens": total_tokens,
+            "input_tokens": input_tokens,
+        }
+
     def generate_content(
         self,
         prompt: str,
@@ -358,6 +392,7 @@ class GeminiService:
         content_text = self._build_prompt_text(prompt, context)
         self._last_thought_summaries = []
         self._last_model_used = None
+        self._last_usage_metadata = {"output_id": None, "total_tokens": None, "input_tokens": None}
 
         try:
             return self._call_model_with_retries(

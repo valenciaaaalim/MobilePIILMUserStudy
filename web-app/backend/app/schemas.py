@@ -2,7 +2,7 @@
 Pydantic schemas for API requests and responses.
 """
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 
 
@@ -55,7 +55,7 @@ class ParticipantSchema(BaseModel):
     created_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     duration_seconds: Optional[float] = None
-    is_complete: bool = False
+    is_complete: Optional[bool] = None
 
     class Config:
         from_attributes = True
@@ -133,7 +133,7 @@ class ScenarioResponseCreate(BaseModel):
     psychological_pressure_level: Optional[str] = None
     psychological_pressure_explanation: Optional[str] = None
     final_message: Optional[str] = None  # Final sent message
-    accepted_rewrite: Optional[bool] = None  # Whether user accepted rewrite
+    accepted_rewrite: Optional[Union[bool, str]] = None  # "true" | "false" | null | "[B]"
 
 
 class ScenarioResponseUpdate(BaseModel):
@@ -156,7 +156,7 @@ class ScenarioResponseUpdate(BaseModel):
     psychological_pressure_level: Optional[str] = None
     psychological_pressure_explanation: Optional[str] = None
     final_message: Optional[str] = None
-    accepted_rewrite: Optional[bool] = None
+    accepted_rewrite: Optional[Union[bool, str]] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
@@ -184,7 +184,7 @@ class ScenarioResponseSchema(BaseModel):
     psychological_pressure_level: Optional[str]
     psychological_pressure_explanation: Optional[str]
     final_message: Optional[str]
-    accepted_rewrite: Optional[bool]
+    accepted_rewrite: Optional[str]
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
     created_at: Optional[datetime] = None
@@ -203,9 +203,9 @@ class PostScenarioSurveyCreate(BaseModel):
     uncertainty_sharing: int = Field(..., ge=1, le=7)
     perceived_risk: int = Field(..., ge=1, le=7)
     # Group A only (nullable)
-    warning_clarity: Optional[int] = Field(None, ge=1, le=7)
-    warning_helpful: Optional[int] = Field(None, ge=1, le=7)
-    rewrite_quality: Optional[int] = Field(None, ge=1, le=7)
+    warning_clarity: Optional[Union[int, str]] = None
+    warning_helpful: Optional[Union[int, str]] = None
+    rewrite_quality: Optional[Union[int, str]] = None
 
 
 class PostScenarioSurveySchema(BaseModel):
@@ -216,9 +216,9 @@ class PostScenarioSurveySchema(BaseModel):
     confidence_judgment: int
     uncertainty_sharing: int
     perceived_risk: int
-    warning_clarity: Optional[int]
-    warning_helpful: Optional[int]
-    rewrite_quality: Optional[int]
+    warning_clarity: Optional[str]
+    warning_helpful: Optional[str]
+    rewrite_quality: Optional[str]
     created_at: Optional[datetime] = None
 
     class Config:
@@ -296,7 +296,7 @@ class EndOfStudySurveyCreate(BaseModel):
     overall_confidence: int = Field(..., ge=1, le=7)
     sharing_rationale: Optional[str] = None
     # Group A only (nullable)
-    trust_system: Optional[int] = Field(None, ge=1, le=7)
+    trust_system: Optional[Union[int, str]] = None
     trust_explanation: Optional[str] = None
 
 
@@ -308,7 +308,7 @@ class EndOfStudySurveySchema(BaseModel):
     realism_explanation: Optional[str]
     overall_confidence: int
     sharing_rationale: Optional[str]
-    trust_system: Optional[int]
+    trust_system: Optional[str]
     trust_explanation: Optional[str]
     created_at: Optional[datetime] = None
 
@@ -348,7 +348,7 @@ class ScenarioMessageRecord(BaseModel):
     participant_id: str  # prolific_id
     conversation_index: int  # 0, 1, 2 -> maps to scenario_number 1, 2, 3
     final_message: str
-    accepted_rewrite: Optional[bool] = None  # true=accept button, false=continue button, null=no button pressed
+    accepted_rewrite: Optional[Union[bool, str]] = None  # true/false/null for A, "[B]" for B
     model: Optional[str] = None  # Actual model used for this scenario's rewrite output
     variant: Optional[str] = None
     # Group A only: PII analysis fields

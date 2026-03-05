@@ -9,7 +9,7 @@ import './ConversationScreen.css';
 import { getRedirectPathFrom409 } from '../utils/apiErrors';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_BASE_URL || 'http://localhost:8080';
-const PII_DEBOUNCE_MS = 400;
+const DEFAULT_PII_DEBOUNCE_MS = 400;
 
 function ConversationScreen({ conversation, participantProlificId, variant, onComplete, conversationIndex }) {
   const navigate = useNavigate();
@@ -20,8 +20,8 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
   const [riskPending, setRiskPending] = useState(false);
   const [isWarningOpen, setIsWarningOpen] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [lastOfferedRewrite, setLastOfferedRewrite] = useState(null);
-  const [lastShownRewrite, setLastShownRewrite] = useState(null);
+  const [, setLastOfferedRewrite] = useState(null);
+  const [, setLastShownRewrite] = useState(null);
   const [lastMaskedText, setLastMaskedText] = useState(null);
   const [lastRawText, setLastRawText] = useState(null);
   const [lastHasPii, setLastHasPii] = useState(false);
@@ -32,13 +32,19 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
   const [piiSpans, setPiiSpans] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [composerHeight, setComposerHeight] = useState(60);
+  const [isSubmitTransitioning, setIsSubmitTransitioning] = useState(false);
+  const [submitLoadingText, setSubmitLoadingText] = useState('Loading');
+  const [piiDebounceMs, setPiiDebounceMs] = useState(DEFAULT_PII_DEBOUNCE_MS);
   const typingTimeoutRef = useRef(null);
   const livePipelineVersionRef = useRef(0);
   const riskRequestCounterRef = useRef(0);
   const sendInFlightRef = useRef(false);
   const assessAbortControllersRef = useRef({ pii: null, risk: null });
+  const submitLoadingDelayRef = useRef(null);
   const suppressAutoOpenRef = useRef(false);
   const composerContainerRef = useRef(null);
+  const pendingAbortMarkerRef = useRef(false);
+  const pendingRiskOutputIdRef = useRef(null);
 
   const instructionSets = [
     {
@@ -67,6 +73,24 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     }
   ];
   const scenarioInstructions = instructionSets[conversationIndex];
+
+  useEffect(() => {
+    let cancelled = false;
+    axios.get(`${API_BASE_URL}/pii/config`, { timeout: 5000 })
+      .then((response) => {
+        if (cancelled) return;
+        const rawMs = Number(response?.data?.gliner_debounce_ms);
+        if (Number.isFinite(rawMs) && rawMs >= 0) {
+          setPiiDebounceMs(Math.round(rawMs));
+        }
+      })
+      .catch(() => {
+        // Keep default debounce if config endpoint is unavailable.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const allMessages = conversation.conversation || [];
@@ -159,6 +183,13 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     || error?.name === 'AbortError'
   );
 
+  const createOutputId = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `output-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  };
+
   const runLivePiiStage = async (pipelineVersion, textToUse) => {
     if (pipelineVersion !== livePipelineVersionRef.current) {
       return;
@@ -233,6 +264,7 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
   const handleTyping = (text, options = {}) => {
     const { preserveDecision = false } = options;
     setDraftText(text);
+    pendingAbortMarkerRef.current = false;
     if (!preserveDecision) {
       setRewriteDecision(null);
     }
@@ -249,7 +281,7 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
       const textToUse = text.trim();
       typingTimeoutRef.current = setTimeout(() => {
         runLivePiiStage(pipelineVersion, textToUse);
-      }, PII_DEBOUNCE_MS);
+      }, piiDebounceMs);
     } else {
       setWarningState(null);
       setLastRiskAnalysis(null);
@@ -295,6 +327,8 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     let hasPii = variant !== 'A';
     let piiController = null;
     let riskController = null;
+    const outputId = createOutputId();
+    pendingRiskOutputIdRef.current = outputId;
     if (variant !== 'A') {
       setPiiSpans([]);
     }
@@ -367,7 +401,8 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
         masked_history: maskedHistory || conversationHistory,
         conversation_history: conversationHistory,
         session_id: conversationIndex + 1,
-        participant_prolific_id: participantProlificId || null
+        participant_prolific_id: participantProlificId || null,
+        output_id: outputId
       }, { signal: riskController.signal });
 
       if (requestId !== riskRequestCounterRef.current) {
@@ -395,6 +430,7 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
         setWarningState(assessment);
         setLastRiskAnalysis(assessment);
         setLastAssessedText(textToUse);
+        pendingAbortMarkerRef.current = false;
 
         if (variant === 'A' && rewrite && rewrite.trim() && rewrite.trim() !== textToUse) {
           setLastOfferedRewrite(rewrite);
@@ -423,6 +459,9 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
       }
       return null;
     } finally {
+      if (pendingRiskOutputIdRef.current === outputId) {
+        pendingRiskOutputIdRef.current = null;
+      }
       if (piiController && assessAbortControllersRef.current.pii === piiController) {
         assessAbortControllersRef.current.pii = null;
       }
@@ -454,6 +493,15 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     }
 
     if (warningState && lastAssessedText === textToUse) {
+      pendingAbortMarkerRef.current = false;
+      setRewriteDecision(null);
+      return;
+    }
+
+    if (lastRiskAnalysis && lastAssessedText === textToUse) {
+      setWarningState(lastRiskAnalysis);
+      pendingAbortMarkerRef.current = false;
+      setRewriteDecision(null);
       return;
     }
 
@@ -471,6 +519,15 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
 
     sendInFlightRef.current = true;
     setIsSending(true);
+    setIsSubmitTransitioning(false);
+    if (submitLoadingDelayRef.current) {
+      clearTimeout(submitLoadingDelayRef.current);
+      submitLoadingDelayRef.current = null;
+    }
+    submitLoadingDelayRef.current = setTimeout(() => {
+      setIsSubmitTransitioning(true);
+      submitLoadingDelayRef.current = null;
+    }, 1000);
     setIsDrawerOpen(false);
     clearLiveTimers();
     livePipelineVersionRef.current += 1;
@@ -478,8 +535,9 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     abortActiveAssessRequests();
 
     const finalText = draftText.trim();
-    let analysis = warningState || lastRiskAnalysis;
-    const decisionAtSubmit = rewriteDecision;
+    const isAbortSubmit = variant === 'A' && pendingAbortMarkerRef.current;
+    const analysis = warningState || lastRiskAnalysis;
+    const decisionAtSubmit = isAbortSubmit ? 'ABORT' : rewriteDecision;
 
     const newMessage = {
       id: `sent-${Date.now()}`,
@@ -502,9 +560,11 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     setPiiSpans([]);
     setCurrentMessageIndex((prev) => prev + 1);
 
-    const originalInput = analysis?.analysisInput || analysis?.originalInput || finalText;
+    // Only persist assessment-derived fields when an assessment was actually run.
+    // If no assessment happened, keep Variant A-only fields null.
+    const originalInput = analysis?.analysisInput ?? analysis?.originalInput ?? null;
     const finalMaskedText = analysis?.maskedInput ?? null;
-    const finalRewriteText = analysis?.saferRewrite || warningState?.saferRewrite || lastShownRewrite || lastOfferedRewrite;
+    const finalRewriteText = analysis?.saferRewrite ?? null;
 
     try {
       const output1 = analysis?.output1 || {};
@@ -513,20 +573,22 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
         participant_id: participantProlificId,
         conversation_index: conversationIndex,
         final_message: finalText,
-        accepted_rewrite: decisionAtSubmit,
-        model: variant === 'B' ? '[B]' : (analysis?.model || null),
+        accepted_rewrite: variant === 'B' ? '[B]' : decisionAtSubmit,
+        model: variant === 'B' ? '[B]' : (isAbortSubmit ? 'ABORT' : (analysis?.model || null)),
         variant
       };
 
       if (variant === 'A') {
-        messagePayload.original_input = originalInput;
-        messagePayload.final_masked_text = finalMaskedText;
-        if (finalRewriteText) {
+        messagePayload.original_input = isAbortSubmit ? 'ABORT' : originalInput;
+        messagePayload.final_masked_text = isAbortSubmit ? 'ABORT' : finalMaskedText;
+        if (isAbortSubmit) {
+          messagePayload.final_rewrite_text = 'ABORT';
+        } else if (finalRewriteText) {
           messagePayload.final_rewrite_text = finalRewriteText;
         }
       }
 
-      if (analysis) {
+      if (analysis && !isAbortSubmit) {
         messagePayload.risk_level = analysis.riskLevel || null;
         messagePayload.primary_risk_factors = analysis.primaryRiskFactors || [];
         messagePayload.reasoning = analysis.reasoning || '';
@@ -544,9 +606,15 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
       }
 
       await axios.post(`${API_BASE_URL}/api/participants/message`, messagePayload);
+      pendingAbortMarkerRef.current = false;
     } catch (error) {
       const redirectPath = getRedirectPathFrom409(error);
       if (redirectPath) {
+        if (submitLoadingDelayRef.current) {
+          clearTimeout(submitLoadingDelayRef.current);
+          submitLoadingDelayRef.current = null;
+        }
+        setIsSubmitTransitioning(false);
         navigate(redirectPath, { replace: true });
         return;
       }
@@ -564,13 +632,17 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
         onComplete();
         navigate(`/survey/mid?index=${conversationIndex}`, { replace: true });
       }, 2000);
+      return;
     }
+
+    setIsSubmitTransitioning(false);
   };
 
   const handleAcceptRewrite = () => {
     if (warningState && warningState.saferRewrite) {
       const rewriteText = warningState.saferRewrite;
       setRewriteDecision(true);
+      pendingAbortMarkerRef.current = false;
       // Clear stale underline immediately, then route through the normal
       // typing pipeline so GLiNER re-runs on the accepted rewrite.
       setPiiSpans([]);
@@ -581,20 +653,61 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
   };
 
   const handleContinueAnyway = () => {
-    setRewriteDecision(false);
-    // Keep in-flight explicit analysis alive so it can be reused later
-    // when the user has not changed the draft.
     if (riskPending) {
+      // User closed before LLM returned: treat this as no completed assessment.
+      // This ensures submit persists ABORT markers for assessment-derived fields.
+      const abortedOutputId = pendingRiskOutputIdRef.current;
+      pendingRiskOutputIdRef.current = null;
       suppressAutoOpenRef.current = true;
+      riskRequestCounterRef.current += 1;
+      abortActiveAssessRequests();
+      if (abortedOutputId && participantProlificId) {
+        void axios.post(`${API_BASE_URL}/api/risk/abort`, {
+          participant_prolific_id: participantProlificId,
+          session_id: conversationIndex + 1,
+          output_id: abortedOutputId
+        }).catch((error) => {
+          console.warn('[RISK] Failed to log aborted output:', error);
+        });
+      }
+      setRiskPending(false);
+      setWarningState(null);
+      setLastOfferedRewrite(null);
+      setLastShownRewrite(null);
+      setPiiSpans([]);
+      setRewriteDecision('ABORT');
+      pendingAbortMarkerRef.current = true;
+    } else {
+      setRewriteDecision(false);
+      pendingAbortMarkerRef.current = false;
     }
     clearLiveTimers();
     setIsWarningOpen(false);
   };
 
   useEffect(() => () => {
+    if (submitLoadingDelayRef.current) {
+      clearTimeout(submitLoadingDelayRef.current);
+      submitLoadingDelayRef.current = null;
+    }
     clearLiveTimers();
     abortActiveAssessRequests();
   }, []);
+
+  useEffect(() => {
+    if (!isSubmitTransitioning) {
+      setSubmitLoadingText('Loading');
+      return undefined;
+    }
+    const frames = ['Loading', 'Loading.', 'Loading..', 'Loading...'];
+    let index = 0;
+    setSubmitLoadingText(frames[0]);
+    const interval = setInterval(() => {
+      index = (index + 1) % frames.length;
+      setSubmitLoadingText(frames[index]);
+    }, 450);
+    return () => clearInterval(interval);
+  }, [isSubmitTransitioning]);
 
   useEffect(() => {
     const composerNode = composerContainerRef.current;
@@ -634,6 +747,10 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
 
   const contactName = getContactName();
 
+  if (isSubmitTransitioning) {
+    return <div className="loading">{submitLoadingText}</div>;
+  }
+
   return (
     <div
       className="conversation-screen"
@@ -650,6 +767,8 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
           piiSpans={piiSpans}
           onPiiClick={handleOpenWarning}
           isSending={isSending}
+          sendDisabled={isWarningOpen}
+          inputDisabled={isWarningOpen}
         />
       </div>
       {isWarningOpen && (riskPending || warningState) && (

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import sys
 import os
+from app.config import settings
 
 # Import gliner_service from backend directory
 # The file is at web-app/backend/gliner_service.py
@@ -119,3 +120,10 @@ async def pii_status():
     except Exception:
         loaded = False
     return {"loaded": loaded}
+
+
+@router.get("/config")
+async def pii_config():
+    """Return frontend-consumable PII config controlled by backend env vars."""
+    debounce_ms = max(0, int(settings.GLINER_DEBOUNCE_MS))
+    return {"gliner_debounce_ms": debounce_ms}

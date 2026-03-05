@@ -1,8 +1,8 @@
 """
 Database models for the web app.
-Normalized schema with 7 tables for user study data.
+Normalized schema for user study data.
 """
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, UniqueConstraint, Enum as SQLEnum, Numeric
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Float, UniqueConstraint, Numeric
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -14,18 +14,6 @@ import enum
 class VariantEnum(str, enum.Enum):
     A = "A"
     B = "B"
-
-
-class PiiTypeEnum(str, enum.Enum):
-    phone_number = "phone_number"
-    home_address = "home_address"
-    email_address = "email_address"
-    date_of_birth = "date_of_birth"
-    workplace = "workplace"
-    government_id = "government_id"
-    financial_info = "financial_info"
-    none_disclosed = "none_disclosed"
-    other = "other"
 
 
 # =============================================================================
@@ -41,13 +29,12 @@ class Participant(Base):
     created_at = Column(DateTime(timezone=True), default=get_singapore_time)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     duration_seconds = Column(Float, nullable=True)  # Duration of study in seconds
-    is_complete = Column(Boolean, default=False)  # Whether participant completed the study
+    is_complete = Column(Boolean, nullable=True, default=None)  # True=completed, False=inactive >3d, None=incomplete active
     
     # Relationships to normalized tables
     baseline_assessment = relationship("BaselineAssessment", back_populates="participant", uselist=False, cascade="all, delete-orphan")
     scenario_responses = relationship("ScenarioResponse", back_populates="participant", cascade="all, delete-orphan")
     post_scenario_surveys = relationship("PostScenarioSurvey", back_populates="participant", cascade="all, delete-orphan")
-    pii_disclosures = relationship("PiiDisclosure", back_populates="participant", cascade="all, delete-orphan")
     sus_responses = relationship("SusResponse", back_populates="participant", uselist=False, cascade="all, delete-orphan")
     end_of_study_survey = relationship("EndOfStudySurvey", back_populates="participant", uselist=False, cascade="all, delete-orphan")
 
@@ -115,7 +102,7 @@ class ScenarioResponse(Base):
     platform_trust_obligation_explanation = Column(Text, nullable=True)
     psychological_pressure_level = Column(String, nullable=True)
     psychological_pressure_explanation = Column(Text, nullable=True)
-    accepted_rewrite = Column(Boolean, nullable=True)  # Whether user accepted the rewrite
+    accepted_rewrite = Column(String, nullable=True)  # "true" | "false" | null | "[B]"
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -141,10 +128,10 @@ class PostScenarioSurvey(Base):
     confidence_judgment = Column(Integer, nullable=False)
     uncertainty_sharing = Column(Integer, nullable=False)
     perceived_risk = Column(Integer, nullable=False)
-    # Group A only - Likert 1-7 (nullable)
-    warning_clarity = Column(Integer, nullable=True)
-    warning_helpful = Column(Integer, nullable=True)
-    rewrite_quality = Column(Integer, nullable=True)
+    # Group A only (stored as text so variant B marker "[B]" can be persisted)
+    warning_clarity = Column(String, nullable=True)
+    warning_helpful = Column(String, nullable=True)
+    rewrite_quality = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
@@ -152,25 +139,7 @@ class PostScenarioSurvey(Base):
 
 
 # =============================================================================
-# TABLE 5: pii_disclosure - Normalized checkbox responses (one row per selection)
-# =============================================================================
-class PiiDisclosure(Base):
-    """PII Disclosure - normalized table for checkbox responses. Each row = one PII type selected."""
-    __tablename__ = "pii_disclosure"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
-    scenario_number = Column(Integer, nullable=False)  # 1, 2, or 3
-    pii_type = Column(String, nullable=False)  # ENUM values as string for SQLite
-    other_specified = Column(String, nullable=True)  # Text if pii_type is 'other'
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Relationships
-    participant = relationship("Participant", back_populates="pii_disclosures")
-
-
-# =============================================================================
-# TABLE 6: sus_responses - Group A only, 10 SUS items (1-5) + calculated score
+# TABLE 5: sus_responses - Group A only, 10 SUS items (1-5) + calculated score
 # =============================================================================
 class SusResponse(Base):
     """SUS Responses - Group A only. 10 SUS items (1-5 scale) plus calculated SUS score."""
@@ -196,7 +165,7 @@ class SusResponse(Base):
 
 
 # =============================================================================
-# TABLE 7: end_of_study_survey - Both groups with Group A specific fields
+# TABLE 6: end_of_study_survey - Both groups with Group A specific fields
 # =============================================================================
 class EndOfStudySurvey(Base):
     """End-of-Study Survey - both groups with Group A specific fields."""
@@ -209,8 +178,8 @@ class EndOfStudySurvey(Base):
     realism_explanation = Column(Text, nullable=True)  # Free text
     overall_confidence = Column(Integer, nullable=False)  # Likert 1-7
     sharing_rationale = Column(Text, nullable=True)  # Free text
-    # Group A only (nullable)
-    trust_system = Column(Integer, nullable=True)  # Likert 1-7
+    # Group A only (stored as text so variant B marker "[B]" can be persisted)
+    trust_system = Column(String, nullable=True)  # Likert 1-7 or "[B]"
     trust_explanation = Column(Text, nullable=True)  # Free text
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
@@ -219,44 +188,20 @@ class EndOfStudySurvey(Base):
 
 
 # =============================================================================
-# TABLE 8: participant_llm_usage - Per-participant total Gemini calls
-# =============================================================================
-class ParticipantLLMUsage(Base):
-    """Total LLM usage per participant."""
-    __tablename__ = "participant_llm_usage"
-
-    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), primary_key=True)
-    total_calls = Column(Integer, nullable=False, default=0)
-
-
-# =============================================================================
-# TABLE 9: participant_scenario_llm_usage - Per-scenario Gemini calls
-# =============================================================================
-class ParticipantScenarioLLMUsage(Base):
-    """LLM usage per participant and scenario."""
-    __tablename__ = "participant_scenario_llm_usage"
-    __table_args__ = (
-        UniqueConstraint("participant_id", "scenario_id", name="uq_participant_scenario_llm_usage"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True)
-    participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
-    scenario_id = Column(Integer, nullable=False)
-    calls = Column(Integer, nullable=False, default=0)
-
-
-# =============================================================================
-# TABLE 10: llm_outputs - Stored LLM responses and cap events
+# TABLE 7: llm_outputs - Stored LLM call records
 # =============================================================================
 class LLMOutput(Base):
-    """Persisted LLM outputs and cap decisions per participant/scenario."""
+    """Persisted LLM call records per participant/scenario."""
     __tablename__ = "llm_outputs"
 
     id = Column(Integer, primary_key=True, index=True)
     participant_id = Column(Integer, ForeignKey("participants.id", ondelete="CASCADE"), nullable=False, index=True)
     scenario_id = Column(Integer, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    llm_used = Column(Boolean, nullable=False, default=False)
-    cap_reached = Column(Boolean, nullable=False, default=False)
+    called_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    output_id = Column(String, nullable=True)
+    llm_used = Column(String, nullable=True)
+    total_tokens = Column(Integer, nullable=True)
+    input_tokens = Column(Integer, nullable=True)
+    nth_call = Column(Integer, nullable=True)
     response_json = Column(JSONB, nullable=True)
-    error_text = Column(Text, nullable=True)
+    error = Column(Text, nullable=True)

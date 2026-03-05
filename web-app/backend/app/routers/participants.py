@@ -9,6 +9,7 @@ from app.models import Participant
 from app.schemas import ParticipantCreate, ParticipantSchema, ParticipantCreateResponse
 from app.config import settings
 from app.utils import get_singapore_time
+from app.participant_state import sync_participant_completion_state
 from urllib.parse import urlencode
 
 router = APIRouter(prefix="/api/participants", tags=["participants"])
@@ -44,6 +45,7 @@ def create_participant(
             Participant.prolific_id == participant_data.prolific_id
         ).first()
         if existing:
+            existing = sync_participant_completion_state(db, existing, mark_active=True)
             status = "completed" if existing.is_complete else "existing"
             completion_url = build_completion_url(existing.prolific_id) if existing.is_complete else None
             return ParticipantCreateResponse(
@@ -69,7 +71,7 @@ def create_participant(
         prolific_id=participant_data.prolific_id,
         variant=variant,
         created_at=now_sgt,
-        is_complete=False
+        is_complete=None
     )
     db.add(participant)
     try:
@@ -80,6 +82,7 @@ def create_participant(
             Participant.prolific_id == participant_data.prolific_id
         ).first()
         if existing:
+            existing = sync_participant_completion_state(db, existing, mark_active=True)
             status = "completed" if existing.is_complete else "existing"
             completion_url = build_completion_url(existing.prolific_id) if existing.is_complete else None
             return ParticipantCreateResponse(
@@ -110,6 +113,7 @@ def get_participant(
     participant = db.query(Participant).filter(Participant.id == participant_id).first()
     if not participant:
         raise HTTPException(status_code=404, detail="Participant not found")
+    participant = sync_participant_completion_state(db, participant, mark_active=False)
     return ParticipantSchema.model_validate(participant)
 
 
@@ -122,4 +126,5 @@ def get_participant_by_prolific_id(
     participant = db.query(Participant).filter(Participant.prolific_id == prolific_id).first()
     if not participant:
         raise HTTPException(status_code=404, detail="Participant not found")
+    participant = sync_participant_completion_state(db, participant, mark_active=False)
     return ParticipantSchema.model_validate(participant)
