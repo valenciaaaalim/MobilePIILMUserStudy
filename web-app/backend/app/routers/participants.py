@@ -10,7 +10,6 @@ from app.schemas import ParticipantCreate, ParticipantSchema, ParticipantCreateR
 from app.config import settings
 from app.utils import get_singapore_time
 from app.participant_state import sync_participant_completion_state
-from urllib.parse import urlencode
 
 router = APIRouter(prefix="/api/participants", tags=["participants"])
 
@@ -24,12 +23,7 @@ def assign_variant(db: Session) -> str:
 
 def build_completion_url(prolific_id: str | None) -> str:
     """Build the Prolific completion URL for a participant."""
-    base_url = settings.PROLIFIC_COMPLETION_URL
-    params = {}
-    if prolific_id:
-        params["PROLIFIC_PID"] = prolific_id
-    if params:
-        return f"{base_url}?{urlencode(params)}"
+    base_url = (settings.PROLIFIC_COMPLETION_URL or "").strip()
     return base_url
 
 

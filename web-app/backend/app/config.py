@@ -86,7 +86,7 @@ class Settings:
     # Prolific
     PROLIFIC_COMPLETION_URL: str = os.getenv(
         "PROLIFIC_COMPLETION_URL",
-        "https://app.prolific.co/submissions/complete"
+        "https://app.prolific.com/submissions/complete?cc=C4V2XJZV"
     )
 
     LLM_SCENARIO_MAX_CALLS: int = int(os.getenv("LLM_SCENARIO_MAX_CALLS", "10"))

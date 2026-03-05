@@ -49,12 +49,6 @@ const normalizeProlificId = (pid) => {
   return cleaned.replace(/_([AB])$/i, '');
 };
 
-const withVariantSuffix = (pid, assignedVariant) => {
-  const base = normalizeProlificId(pid);
-  if (!base || !assignedVariant) return base;
-  return `${base}_${assignedVariant}`;
-};
-
 const resolveProlificId = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const urlProlificId = urlParams.get('PROLIFIC_PID');
@@ -207,16 +201,6 @@ function App() {
       setCompletionUrl(response.data.completion_url || '');
       setProlificId(prolificId);
 
-      if (shouldTagVariantInPid(prolificId) && response.data.variant) {
-        const taggedPid = withVariantSuffix(prolificId, response.data.variant);
-        const currentUrl = new URL(window.location.href);
-        if (currentUrl.searchParams.get('PROLIFIC_PID') !== taggedPid) {
-          currentUrl.searchParams.set('PROLIFIC_PID', taggedPid);
-          const nextSearch = currentUrl.searchParams.toString();
-          const nextUrl = `${currentUrl.pathname}${nextSearch ? `?${nextSearch}` : ''}${currentUrl.hash || ''}`;
-          window.history.replaceState({}, '', nextUrl);
-        }
-      }
     } catch (error) {
       console.error('Error initializing participant:', error);
     } finally {

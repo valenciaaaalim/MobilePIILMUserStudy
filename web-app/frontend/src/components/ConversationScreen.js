@@ -101,7 +101,8 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
 
     setMessages(initialMessages);
     setCurrentMessageIndex(allMessages.length);
-    setIsDrawerOpen(true);
+    // Scenario 1 starts with instructions open; scenarios 2+ start closed.
+    setIsDrawerOpen(conversationIndex === 0);
     setWarningState(null);
     setLastRiskAnalysis(null);
     setRiskPending(false);
@@ -149,7 +150,7 @@ function ConversationScreen({ conversation, participantProlificId, variant, onCo
     return () => {
       cancelled = true;
     };
-  }, [conversation]);
+  }, [conversation, conversationIndex]);
 
   const handleToggleDrawer = () => {
     setIsDrawerOpen((open) => !open);
