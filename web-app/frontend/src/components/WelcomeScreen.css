@@ -1,5 +1,6 @@
 .consent-screen {
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   background: linear-gradient(180deg, #f7f5f2 0%, #f1f4f7 100%);
   padding: 24px;
   display: flex;
@@ -22,7 +23,7 @@
 .consent-scroll {
   padding: 32px 36px 140px;
   overflow-y: auto;
-  max-height: calc(100vh - 48px);
+  flex: 1;
 }
 
 .consent-scroll::-webkit-scrollbar {

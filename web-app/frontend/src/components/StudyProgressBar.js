@@ -41,8 +41,8 @@ function StudyProgressBar() {
 
   return (
     <div style={{
-      position: 'sticky', top: 0, zIndex: 100,
-      background: '#f5f5f5', padding: '6px 12px 4px',
+      background: '#f5f5f5',
+      padding: 'calc(env(safe-area-inset-top, 0px) + 6px) 12px 4px',
       borderBottom: '1px solid #e0e0e0',
     }}>
       <div style={{

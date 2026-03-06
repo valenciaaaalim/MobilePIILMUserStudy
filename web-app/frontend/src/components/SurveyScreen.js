@@ -626,7 +626,7 @@ function SurveyScreen({ participantId, participantProlificId, variant }) {
                   padding: '8px 12px',
                   border: '1px solid #ccc',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '16px'
                 }}
               />
             </div>
@@ -647,7 +647,7 @@ function SurveyScreen({ participantId, participantProlificId, variant }) {
               padding: '12px',
               border: '1px solid #ccc',
               borderRadius: '4px',
-              fontSize: '14px',
+              fontSize: '16px',
               fontFamily: 'inherit',
               resize: 'vertical'
             }}

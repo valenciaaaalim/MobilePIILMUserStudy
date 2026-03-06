@@ -607,6 +607,8 @@ function ConversationScreen({ conversation, participantId, participantProlificId
   };
 
   const handleRetryAssessment = async () => {
+    setWarningState(null);
+    setCapReached(false);
     setRiskError(false);
     setRiskPending(true);
     const textToUse = draftText.trim();
@@ -625,43 +627,45 @@ function ConversationScreen({ conversation, participantId, participantProlificId
     if (!textToUse) {
       return;
     }
+    if (riskPending) {
+      return;
+    }
     setIsDrawerOpen(false);
     suppressAutoOpenRef.current = false;
     setRiskError(false);
+    setCapReached(false);
 
     // Stop pending typing debounce before explicit analysis click.
     clearLiveTimers();
     livePipelineVersionRef.current += 1;
 
-    setIsWarningOpen(true);
+    const reusableAssessment = lastAssessedText === textToUse
+      ? (warningState || lastRiskAnalysis)
+      : null;
 
-    if (riskPending) {
-      return;
-    }
+    setWarningState(null);
+    setLastOfferedRewrite(null);
+    setLastShownRewrite(null);
+    setRiskPending(true);
+    setIsWarningOpen(true);
 
     const interactionRow = await startAlertInteraction();
     if (!interactionRow) {
+      setRiskPending(false);
       setIsWarningOpen(false);
       return;
     }
 
-    if (warningState && lastAssessedText === textToUse) {
-      const completed = await completeAlertInteraction(interactionRow.id, warningState);
+    if (reusableAssessment) {
+      const completed = await completeAlertInteraction(interactionRow.id, reusableAssessment);
       if (!completed) {
+        setRiskPending(false);
         setIsWarningOpen(false);
         return;
       }
-      pendingAbortMarkerRef.current = false;
-      return;
-    }
-
-    if (lastRiskAnalysis && lastAssessedText === textToUse) {
-      const completed = await completeAlertInteraction(interactionRow.id, lastRiskAnalysis);
-      if (!completed) {
-        setIsWarningOpen(false);
-        return;
-      }
-      setWarningState(lastRiskAnalysis);
+      setWarningState(reusableAssessment);
+      setLastRiskAnalysis(reusableAssessment);
+      setRiskPending(false);
       pendingAbortMarkerRef.current = false;
       return;
     }
@@ -673,6 +677,7 @@ function ConversationScreen({ conversation, participantId, participantProlificId
     if (assessment) {
       const completed = await completeAlertInteraction(interactionRow.id, assessment);
       if (!completed) {
+        setRiskPending(false);
         setIsWarningOpen(false);
         return;
       }

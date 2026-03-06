@@ -1,7 +1,8 @@
 .conversation-screen {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 0;
+  flex: 1;
   position: relative;
   background-color: #e5ddd5;
   background-image: 
@@ -12,6 +13,9 @@
       rgba(0, 0, 0, 0.03) 2px,
       rgba(0, 0, 0, 0.03) 4px
     );
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .instructions-drawer {
@@ -19,7 +23,7 @@
   --drawer-width: min(75vw, calc(100vw - var(--tab-width)));
   position: fixed;
   top: 0;
-  bottom: var(--composer-height, 0px);
+  bottom: 0;
   right: 0;
   width: calc(var(--drawer-width) + var(--tab-width));
   z-index: 1200;
@@ -61,7 +65,7 @@
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 24px 24px calc(env(safe-area-inset-bottom, 0px) + 104px);
   gap: 16px;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -75,14 +79,18 @@
 
 .drawer-overlay {
   position: fixed;
-  inset: 0 0 var(--composer-height, 0px) 0;
-  background: rgba(0, 0, 0, 0.8);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
   z-index: 1100;
 }
 
 .conversation-composer-layer {
-  position: relative;
+  position: sticky;
+  bottom: 0;
   z-index: 1150;
+  margin-top: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: linear-gradient(to top, rgba(229, 221, 213, 0.98), rgba(229, 221, 213, 0.9));
 }
 
 .drawer-panel h2 {
@@ -170,6 +178,10 @@
 
 @media (max-width: 480px) {
   .drawer-panel {
-    padding: 16px;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 112px);
+  }
+
+  .drawer-tab {
+    top: 124px;
   }
 }

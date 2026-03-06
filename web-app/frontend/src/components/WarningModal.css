@@ -9,7 +9,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1300;
-  padding: 20px;
+  padding: 20px 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  box-sizing: border-box;
 }
 
 .warning-modal {
@@ -17,8 +18,12 @@
   border-radius: 8px;
   max-width: 500px;
   width: 100%;
+  max-height: min(86dvh, 720px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 @keyframes slideIn {
@@ -52,6 +57,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  overflow-y: auto;
 }
 
 .warning-content h3 {
@@ -151,7 +157,7 @@
 .warning-actions {
   display: flex;
   gap: 12px;
-  padding: 16px;
+  padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
   border-top: 1px solid #e0e0e0;
 }
 
