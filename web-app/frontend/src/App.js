@@ -209,6 +209,7 @@ function App() {
       setCompletionUrl(response.data.completion_url || '');
       setProlificId(prolificId);
       if (response.data.session_token) {
+        axios.defaults.headers.common['X-Session-Token'] = response.data.session_token;
         setSessionToken(response.data.session_token);
       }
 
