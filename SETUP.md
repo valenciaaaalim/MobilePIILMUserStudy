@@ -90,21 +90,11 @@ The `formatConversationHistoryAsXml()` function currently uses a placeholder for
 conda activate ner
 
 cd backend
-python seed_data.py (to start the database and seed the conversations)
-access via SQlite DB
+uvicorn app.main:app --host 0.0.0.0 --port 8080
+access via PostgreSQL via DATABASE_URL
 
 cd frontend
 npm install
 npm start
 access via http://localhost:3000
 ```
-
-## Run with Docker
-```
-docker-compose down
-rm backend/data/web_app.db
-docker-compose build --no-cache
-docker-compose up -d
-docker-compose exec web-app-backend python seed_data.py
-```
-
