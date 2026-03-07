@@ -905,18 +905,20 @@ function ConversationScreen({ conversation, participantId, participantProlificId
       <ChatHeader contactName={contactName} scenario={conversation.scenario} />
       <div className="conversation-body">
         <MessageList messages={messages} conversationKey={conversationIndex} scrollLocked={isDrawerOpen} />
+      </div>
 
-        {isDrawerOpen && <div className="drawer-overlay" onClick={handleCloseDrawer} />}
+      {isDrawerOpen && <div className="drawer-overlay" onClick={handleCloseDrawer} />}
 
-        <div className={`instructions-drawer ${isDrawerOpen ? 'open' : ''}`}>
-          <button
-            type="button"
-            className="drawer-tab"
-            onClick={handleToggleDrawer}
-          >
-            {isDrawerOpen ? 'Close' : 'Instructions'}
-          </button>
-          <div className="drawer-panel">
+      <div className={`instructions-drawer ${isDrawerOpen ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="drawer-tab"
+          onClick={handleToggleDrawer}
+        >
+          {isDrawerOpen ? 'Close' : 'Instructions'}
+        </button>
+        <div className="drawer-panel">
+          <div className="drawer-content">
             <div className="drawer-header">
               <h2>{scenarioInstructions?.title || ''}</h2>
               <button
@@ -927,24 +929,22 @@ function ConversationScreen({ conversation, participantId, participantProlificId
                 Close
               </button>
             </div>
-            <div className="drawer-content">
-              {(scenarioInstructions?.content || []).map((item, idx) => {
-                if (item.type === 'bubble') {
-                  if (!item.text) return null;
-                  return (
-                    <div key={`${conversationIndex}-instruction-bubble-${idx}`} className="instruction-bubble">
-                      <div className="instruction-bubble__label">{item.label || 'Reference text'}</div>
-                      <div className="instruction-bubble__message">
-                        {item.text}
-                      </div>
-                    </div>
-                  );
-                }
+            {(scenarioInstructions?.content || []).map((item, idx) => {
+              if (item.type === 'bubble') {
+                if (!item.text) return null;
                 return (
-                  <p key={`${conversationIndex}-instruction-paragraph-${idx}`}>{item.body}</p>
+                  <div key={`${conversationIndex}-instruction-bubble-${idx}`} className="instruction-bubble">
+                    <div className="instruction-bubble__label">{item.label || 'Reference text'}</div>
+                    <div className="instruction-bubble__message">
+                      {item.text}
+                    </div>
+                  </div>
                 );
-              })}
-            </div>
+              }
+              return (
+                <p key={`${conversationIndex}-instruction-paragraph-${idx}`}>{item.body}</p>
+              );
+            })}
           </div>
         </div>
       </div>

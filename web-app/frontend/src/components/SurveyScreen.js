@@ -270,6 +270,23 @@ function SurveyScreen({ participantId, participantProlificId, variant }) {
     }
   }, [surveyType, conversationIndex]);
 
+  // Scroll focused input into view when keyboard opens on mobile
+  useEffect(() => {
+    const container = surveyContentRef.current;
+    if (!container) return undefined;
+    const handleFocusIn = (e) => {
+      const el = e.target;
+      if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+        // Small delay lets iOS finish resizing the visual viewport
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    };
+    container.addEventListener('focusin', handleFocusIn);
+    return () => container.removeEventListener('focusin', handleFocusIn);
+  }, []);
+
   const getScaleLabelRow = (question) => {
     const labels = Array.from({ length: question.scale }, () => '');
     if (question.scale === 7) {

@@ -6,7 +6,7 @@
   min-height: 0;
   padding: 20px;
   background-color: #f5f5f5;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .survey-content {
@@ -17,8 +17,10 @@
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   margin: 20px 0;
-  max-height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
 

@@ -343,13 +343,29 @@ function App() {
     const vv = window.visualViewport;
     if (!vv) return undefined;
     const update = () => {
+      const h = `${vv.height}px`;
+      document.documentElement.style.height = h;
+      document.body.style.height = h;
+      const root = document.getElementById('root');
+      if (root) root.style.height = h;
       if (appRef.current) {
-        appRef.current.style.height = `${vv.height}px`;
+        appRef.current.style.height = h;
+      }
+      // Keep viewport pinned to top-left to prevent iOS scroll offset
+      window.scrollTo(0, 0);
+    };
+    const onScroll = () => {
+      if (vv.offsetTop !== 0) {
+        window.scrollTo(0, 0);
       }
     };
     update();
     vv.addEventListener('resize', update);
-    return () => vv.removeEventListener('resize', update);
+    vv.addEventListener('scroll', onScroll);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   const handleConversationComplete = () => {

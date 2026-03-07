@@ -29,7 +29,6 @@
 .conversation-composer-layer {
   flex-shrink: 0;
   z-index: 1150;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: linear-gradient(to top, rgba(229, 221, 213, 0.98), rgba(229, 221, 213, 0.9));
 }
 
@@ -45,6 +44,7 @@
   transform: translateX(var(--drawer-width));
   transition: transform 0.3s ease;
   pointer-events: none;
+  /* Sit above ChatHeader so the panel covers the contact bar */
 }
 
 .instructions-drawer > * {
@@ -85,10 +85,8 @@
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  padding: 24px;
-  gap: 16px;
   box-sizing: border-box;
-  overflow-x: hidden;
+  overflow: hidden;
   pointer-events: auto;
   z-index: 1;
 }
@@ -103,6 +101,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.68);
   z-index: 1100;
+  /* Covers entire conversation-screen including ChatHeader */
 }
 
 .drawer-panel h2 {
@@ -116,7 +115,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-shrink: 0;
+  margin-bottom: 16px;
 }
 
 .drawer-close-button {
@@ -140,7 +139,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-right: 8px;
+  padding: 24px;
+  padding-right: 16px;
   font-size: 14px;
   color: #555;
   line-height: 1.6;
@@ -192,8 +192,9 @@
 }
 
 @media (max-width: 480px) {
-  .drawer-panel {
+  .drawer-content {
     padding: 16px;
+    padding-right: 12px;
   }
 
   .drawer-tab {
