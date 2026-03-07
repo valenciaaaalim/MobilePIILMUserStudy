@@ -373,7 +373,7 @@ function App() {
     return (
       <div className="error" style={{ padding: '2rem', textAlign: 'center' }}>
         <p>This study must be completed on a <strong>mobile device</strong>.</p>
-        <p>Please open this link on your smartphone.</p>
+        <p> Please open this link on your smartphone.</p>
       </div>
     );
   }
