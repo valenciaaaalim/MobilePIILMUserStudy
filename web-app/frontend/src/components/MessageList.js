@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble';
 import DateSeparator from './DateSeparator';
 import './MessageList.css';
 
-function MessageList({ messages, conversationKey }) {
+function MessageList({ messages, conversationKey, scrollLocked }) {
   const listRef = useRef(null);
   const wasNearBottomRef = useRef(true);
   const skipAutoScrollRef = useRef(true);
@@ -57,7 +57,7 @@ function MessageList({ messages, conversationKey }) {
   };
 
   return (
-    <div className="message-list" ref={listRef} onScroll={handleScroll}>
+    <div className={`message-list${scrollLocked ? ' message-list--locked' : ''}`} ref={listRef} onScroll={handleScroll}>
       {messages.map((message, index) => {
         const prevMessage = index > 0 ? messages[index - 1] : null;
         const showSeparator = needsDateSeparator(

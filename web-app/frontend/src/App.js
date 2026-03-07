@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import axios from 'axios';
 import WelcomeScreen from './components/WelcomeScreen';
@@ -337,6 +337,21 @@ function App() {
     }
   }, [sessionToken]);
 
+  const appRef = useRef(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+    const update = () => {
+      if (appRef.current) {
+        appRef.current.style.height = `${vv.height}px`;
+      }
+    };
+    update();
+    vv.addEventListener('resize', update);
+    return () => vv.removeEventListener('resize', update);
+  }, []);
+
   const handleConversationComplete = () => {
     // Navigation is handled by the router; this is a no-op kept for prop interface compatibility.
   };
@@ -381,7 +396,7 @@ function App() {
 
   return (
     <Router>
-      <div className="App">
+      <div className="App" ref={appRef}>
         <StudyProgressBar />
         <Routes>
           <Route element={<StudyGuard participantId={participantId} />}>

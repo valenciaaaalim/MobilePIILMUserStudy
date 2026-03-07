@@ -903,7 +903,51 @@ function ConversationScreen({ conversation, participantId, participantProlificId
       style={{ '--composer-height': `${composerHeight}px` }}
     >
       <ChatHeader contactName={contactName} scenario={conversation.scenario} />
-      <MessageList messages={messages} conversationKey={conversationIndex} />
+      <div className="conversation-body">
+        <MessageList messages={messages} conversationKey={conversationIndex} scrollLocked={isDrawerOpen} />
+
+        {isDrawerOpen && <div className="drawer-overlay" onClick={handleCloseDrawer} />}
+
+        <div className={`instructions-drawer ${isDrawerOpen ? 'open' : ''}`}>
+          <button
+            type="button"
+            className="drawer-tab"
+            onClick={handleToggleDrawer}
+          >
+            {isDrawerOpen ? 'Close' : 'Instructions'}
+          </button>
+          <div className="drawer-panel">
+            <div className="drawer-header">
+              <h2>{scenarioInstructions?.title || ''}</h2>
+              <button
+                type="button"
+                className="drawer-close-button"
+                onClick={handleCloseDrawer}
+              >
+                Close
+              </button>
+            </div>
+            <div className="drawer-content">
+              {(scenarioInstructions?.content || []).map((item, idx) => {
+                if (item.type === 'bubble') {
+                  if (!item.text) return null;
+                  return (
+                    <div key={`${conversationIndex}-instruction-bubble-${idx}`} className="instruction-bubble">
+                      <div className="instruction-bubble__label">{item.label || 'Reference text'}</div>
+                      <div className="instruction-bubble__message">
+                        {item.text}
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <p key={`${conversationIndex}-instruction-paragraph-${idx}`}>{item.body}</p>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
       <div ref={composerContainerRef} className="conversation-composer-layer">
         <ChatComposer
           draftText={draftText}
@@ -928,49 +972,6 @@ function ConversationScreen({ conversation, participantId, participantProlificId
           onRetry={handleRetryAssessment}
         />
       )}
-
-      {isDrawerOpen && <div className="drawer-overlay" onClick={handleCloseDrawer} />}
-
-      <div className={`instructions-drawer ${isDrawerOpen ? 'open' : ''}`}>
-        <button
-          type="button"
-          className="drawer-tab"
-          onClick={handleToggleDrawer}
-        >
-          {isDrawerOpen ? 'Close' : 'Instructions'}
-        </button>
-        <div className="drawer-panel">
-          <div className="drawer-header">
-            <h2>{scenarioInstructions?.title || ''}</h2>
-            <button
-              type="button"
-              className="drawer-close-button"
-              onClick={handleCloseDrawer}
-            >
-              Close
-            </button>
-          </div>
-          <div className="drawer-content">
-            {(scenarioInstructions?.content || []).map((item, idx) => {
-              if (item.type === 'bubble') {
-                if (!item.text) return null;
-                return (
-                  <div key={`${conversationIndex}-instruction-bubble-${idx}`} className="instruction-bubble">
-                    <div className="instruction-bubble__label">{item.label || 'Reference text'}</div>
-                    <div className="instruction-bubble__message">
-                      {item.text}
-                    </div>
-                  </div>
-
-                );
-              }
-              return (
-                <p key={`${conversationIndex}-instruction-paragraph-${idx}`}>{item.body}</p>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

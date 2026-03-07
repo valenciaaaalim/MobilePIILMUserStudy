@@ -8,17 +8,15 @@ python-multipart==0.0.6
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 gliner==0.2.22
-torch==2.9.0
 transformers==4.51.0
 
 # GLiNER dependencies
 nltk==3.8.1
-transformers>=4.38.2
 
 # Utilities
 python-dotenv==1.0.0
 python-json-logger==2.0.7
-google-genai>=1.0.0
+google-genai==1.4.0
 
 # Security
 itsdangerous==2.1.2

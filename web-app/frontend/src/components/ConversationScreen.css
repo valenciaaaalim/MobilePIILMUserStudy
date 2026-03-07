@@ -5,7 +5,7 @@
   flex: 1;
   position: relative;
   background-color: #e5ddd5;
-  background-image: 
+  background-image:
     repeating-linear-gradient(
       0deg,
       transparent,
@@ -13,15 +13,30 @@
       rgba(0, 0, 0, 0.03) 2px,
       rgba(0, 0, 0, 0.03) 4px
     );
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   box-sizing: border-box;
   overflow: hidden;
+}
+
+.conversation-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.conversation-composer-layer {
+  flex-shrink: 0;
+  z-index: 1150;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: linear-gradient(to top, rgba(229, 221, 213, 0.98), rgba(229, 221, 213, 0.9));
 }
 
 .instructions-drawer {
   --tab-width: 36px;
   --drawer-width: min(75vw, calc(100vw - var(--tab-width)));
-  position: fixed;
+  position: absolute;
   top: 0;
   bottom: 0;
   right: 0;
@@ -29,6 +44,11 @@
   z-index: 1200;
   transform: translateX(var(--drawer-width));
   transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.instructions-drawer > * {
+  pointer-events: auto;
 }
 
 .drawer-tab {
@@ -65,7 +85,7 @@
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  padding: 24px 24px calc(env(safe-area-inset-bottom, 0px) + 104px);
+  padding: 24px;
   gap: 16px;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -75,22 +95,14 @@
 
 .instructions-drawer.open {
   transform: translateX(0);
+  pointer-events: auto;
 }
 
 .drawer-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.68);
   z-index: 1100;
-}
-
-.conversation-composer-layer {
-  position: sticky;
-  bottom: 0;
-  z-index: 1150;
-  margin-top: auto;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: linear-gradient(to top, rgba(229, 221, 213, 0.98), rgba(229, 221, 213, 0.9));
 }
 
 .drawer-panel h2 {
@@ -104,6 +116,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .drawer-close-button {
@@ -123,8 +136,10 @@
 
 .drawer-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding-right: 8px;
   font-size: 14px;
   color: #555;
@@ -178,10 +193,10 @@
 
 @media (max-width: 480px) {
   .drawer-panel {
-    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 112px);
+    padding: 16px;
   }
 
   .drawer-tab {
-    top: 124px;
+    top: 72px;
   }
 }

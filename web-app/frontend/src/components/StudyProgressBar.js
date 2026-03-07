@@ -44,6 +44,7 @@ function StudyProgressBar() {
       background: '#f5f5f5',
       padding: 'calc(env(safe-area-inset-top, 0px) + 6px) 12px 4px',
       borderBottom: '1px solid #e0e0e0',
+      flexShrink: 0,
     }}>
       <div style={{
         height: '4px', borderRadius: '2px',

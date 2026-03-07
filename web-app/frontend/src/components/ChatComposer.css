@@ -3,7 +3,7 @@
   --composer-input-v-padding: 16px;
   --composer-input-max-height: calc((var(--composer-input-line-height) * 5) + var(--composer-input-v-padding));
   background-color: #f0f0f0;
-  padding: 8px 8px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  padding: 8px;
   border-top: 1px solid #e0e0e0;
 }
 
