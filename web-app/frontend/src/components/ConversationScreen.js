@@ -687,6 +687,13 @@ function ConversationScreen({ conversation, participantId, participantProlificId
     }
   };
 
+  const scrollMessageListToBottom = () => {
+    const el = document.querySelector('.message-list');
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+  };
+
   const handleSend = async () => {
     if (!draftText.trim() || sendInFlightRef.current) return;
 
@@ -697,10 +704,6 @@ function ConversationScreen({ conversation, participantId, participantProlificId
       clearTimeout(submitLoadingDelayRef.current);
       submitLoadingDelayRef.current = null;
     }
-    submitLoadingDelayRef.current = setTimeout(() => {
-      setIsSubmitTransitioning(true);
-      submitLoadingDelayRef.current = null;
-    }, 1000);
     setIsDrawerOpen(false);
     clearLiveTimers();
     livePipelineVersionRef.current += 1;
@@ -729,6 +732,9 @@ function ConversationScreen({ conversation, participantId, participantProlificId
     setLastAssessedText('');
     setPiiSpans([]);
     setCurrentMessageIndex((prev) => prev + 1);
+
+    // Scroll to bottom so user sees their sent message
+    requestAnimationFrame(() => scrollMessageListToBottom());
 
     try {
       const messagePayload = {
@@ -762,10 +768,15 @@ function ConversationScreen({ conversation, participantId, participantProlificId
     const userTypedMessages = messages.filter((m) => m.id && m.id.startsWith('sent-')).length;
 
     if (userTypedMessages > 0 || currentMessageIndex >= allMessages.length) {
+      // Let user see their sent message for 2 seconds, then show loading and navigate
+      submitLoadingDelayRef.current = setTimeout(() => {
+        setIsSubmitTransitioning(true);
+        submitLoadingDelayRef.current = null;
+      }, 2000);
       setTimeout(() => {
         onComplete();
         navigate(`/survey/mid?index=${conversationIndex}`, { replace: true });
-      }, 2000);
+      }, 3000);
       return;
     }
 
