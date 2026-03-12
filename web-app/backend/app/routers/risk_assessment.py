@@ -330,15 +330,15 @@ def transform_messages(raw_messages: List[Dict[str, Any]]) -> List[Dict[str, Any
 
 
 def load_annotated_conversations(force_reload: bool = False) -> Dict[int, List[Dict[str, Any]]]:
-    """Load and cache conversations from annotated_test.json."""
+    """Load and cache conversations from conversation_history.json."""
     global _annotated_conversations
     if _annotated_conversations is not None and not force_reload:
         return _annotated_conversations
     
-    # Try multiple paths for annotated_test.json
+    # Try multiple paths for conversation_history.json
     possible_paths = [
-        Path("/app/app/assets/annotated_test.json"),  # Docker mount location
-        Path(__file__).resolve().parent.parent / "assets" / "annotated_test.json",  # Local dev
+        Path("/app/app/assets/conversation_history.json"),  # Docker mount location
+        Path(__file__).resolve().parent.parent / "assets" / "conversation_history.json",  # Local dev
     ]
     
     json_path = None
@@ -348,7 +348,7 @@ def load_annotated_conversations(force_reload: bool = False) -> Dict[int, List[D
             break
     
     if json_path is None:
-        logger.error("annotated_test.json not found in any expected location")
+        logger.error("conversation_history.json not found in any expected location")
         return {}
     
     try:
@@ -367,12 +367,12 @@ def load_annotated_conversations(force_reload: bool = False) -> Dict[int, List[D
         logger.info("Loaded %d conversations from %s", len(_annotated_conversations), json_path)
         return _annotated_conversations
     except Exception as e:
-        logger.error("Failed to load annotated_test.json: %s", e)
+        logger.error("Failed to load conversation_history.json: %s", e)
         return {}
 
 
 def get_conversation_history_from_json(conversation_id: int) -> List[Dict[str, Any]]:
-    """Get conversation history from annotated_test.json by conversation_id."""
+    """Get conversation history from conversation_history.json by conversation_id."""
     conversations = load_annotated_conversations()
     return conversations.get(conversation_id, [])
 
@@ -384,15 +384,15 @@ def _build_risk_service() -> RiskAssessmentService:
 
 
 def load_seed_conversations_with_metadata() -> List[Dict[str, Any]]:
-    """Load seed conversations with metadata from annotated_test.json."""
+    """Load seed conversations with metadata from conversation_history.json."""
     # Force reload to get fresh data
     global _annotated_conversations
     _annotated_conversations = None
     
-    # Try multiple paths for annotated_test.json
+    # Try multiple paths for conversation_history.json
     possible_paths = [
-        Path("/app/app/assets/annotated_test.json"),  # Docker mount location
-        Path(__file__).resolve().parent.parent / "assets" / "annotated_test.json",  # Local dev
+        Path("/app/app/assets/conversation_history.json"),  # Docker mount location
+        Path(__file__).resolve().parent.parent / "assets" / "conversation_history.json",  # Local dev
     ]
     
     json_path = None
@@ -402,7 +402,7 @@ def load_seed_conversations_with_metadata() -> List[Dict[str, Any]]:
             break
     
     if json_path is None:
-        logger.error("annotated_test.json not found in any expected location")
+        logger.error("conversation_history.json not found in any expected location")
         return []
     
     try:
@@ -448,7 +448,7 @@ def get_seed_conversations(request: Request):
 
 @router.post("/conversations/reload")
 def reload_conversations():
-    """Force reload conversations from annotated_test.json (for development)."""
+    """Force reload conversations from conversation_history.json (for development)."""
     global _annotated_conversations
     _annotated_conversations = None
     result = load_seed_conversations_with_metadata()
@@ -547,7 +547,7 @@ def _process_risk_assessment_payload(request: Dict[str, Any]) -> Any:
     finally:
         db.close()
 
-    # Get conversation history from annotated_test.json using conversation_id.
+    # Get conversation history from conversation_history.json using conversation_id.
     # Frontend can also provide masked_history to avoid remasking history repeatedly.
     conversation_history = get_conversation_history_from_json(conversation_id)
     masked_history = masked_history_input if masked_history_input else None

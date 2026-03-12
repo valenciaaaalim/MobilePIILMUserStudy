@@ -19,7 +19,7 @@ function isMobileDevice() {
   return window.innerWidth <= 768 && 'ontouchstart' in window;
 }
 
-// Hardcoded conversation data (from annotated_test.json)
+// Hardcoded conversation data (from conversation_history.json)
 // This will be loaded from the backend in production
 const SEED_CONVERSATIONS = [
   {
